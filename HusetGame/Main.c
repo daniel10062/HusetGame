@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include "random.h"
 #include <time.h>
+#include <stdlib.h>
 
 
 //defines
@@ -12,40 +13,71 @@
 
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>|
-// GAME IS CURRENTLY WORKING: VERSION OF GAME 1.0  |
+//	 GAME IS CURRENTLY WORKING: VERSION OF GAME 1.0		|
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>|
 
 /* -----> Current Working Problem <-----
 * Problem when wanting to step back through a door already opened. #fixed
-* 
-*
+* Problem while loading file, cant get right characters (#fixed)// Sideproblem, Kermit seems to get weird positions after action.
+* Problem when a key spawn behind a door and then passing the door will make the key go away
 */
 
-enum states {INIT = 1, RUNNING, MENU, EXIT, WIN, SAVE};
+/* -----> Current Working Ideas <-----
+* Implimenting an enemy.
+* Impliment a type of store where you can buy different objects; Need coins and things that give coins. Different objects to buy, example: Hint where flashlights are; Hint on where to go;
+* If enemy is implemented weapons might be good.
+* Implement difficulty levels.
+*/
 
-void loadScreen(MapT themap, int *key, int *width, int *height, int *flashlight);
-void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *flashlight);
-void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight, int  *W, int *H);
+/* -----> Enemy | Battlestage <-----
+* A gamestate in which the person fights a enemy on the screen;
+* Screen---
+* Should show available weapons, flasks etc... 
+* Show HP, Attacks and how to do.
+* Enemy---
+* If the enemy is in sight for Kermit, enter battlestage;
+* 
+*/
+
+enum states {INIT = 1, RUNNING, MENU, EXIT, WIN, SAVE, FIGHT};
+
+typedef struct Enemy {
+	int HP;
+	int x;
+	int y;
+	//Weapons go from S - A - B - C - D - E
+	char weapon;
+	int stance; //In attack: 1 if not 0;
+} Enemy;
+
+void spawnEnemy(Enemy *enemyarr, MapT themap, inputT *obj, int *W, int *H);
+void loadScreen(MapT themap, int *key, int *width, int *height, int *flashlight, int *kermitX, int *kermitY);
+void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY);
+void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight, int  *W, int *H, int *kermitX, int *kermitY);
 void updateMap(MapT theMap, int *firstEntry);
-void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flashlight);
+void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY);
 void action(inputT inputVal, int *kermitX, int *kermitY, MapT themap);
 void updateKermitPoss(int *kermitX, int *kermitY, int *prevX, int *prevY, MapT themap);
 void sightRadius(int *kermitX, int *kermitY, MapT themap, int changer, char siteRange);
 int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, int *keys, int *gamestate, int *flashlight);
 int checkOpenDoor(int *kermitX, int *kermitY, MapT themap);
 int checkWinDoor(int *kermitX, int *kermitY, MapT themap);
-void collateralSightCalc(MapT themap, int *height, int *width);
+void collateralSightCalc(MapT themap, int *height, int *width, int *kermitX, int *kermitY);
 void addFlashlight(MapT themap, int width, int height,positionT *test, int choiceX, int choiceY);
 int checkIfMoveFlashlight(int *kermitX, int *kermitY, MapT themap, int *flashlight);
-void saveScreen(int *key, int *flashlight, MapT themap, int *width, int *height);
-void createFile(int *key, int *flashlight, MapT themap, int *width, int *height);
-void loadFile(MapT themap, int *key, int *width, int *height);
+void saveScreen(int *key, int *flashlight, MapT themap, int *width, int *height, int *kermitX, int *kermitY);
+void createFile(int *key, int *flashlight, MapT themap, int *width, int *height, int *kermitX, int *kermitY);
+void checkFight(MapT themap,char site, int *gamestate, Enemy *enemyarr);
+void enemyMove(Enemy *enemyarr, MapT themap, int *kX, int *kY);
+void loadFile(MapT themap, int *key, int *width, int *height, int *kermitX, int *kermitY);
 
 struct Kermit {
 	int prevX;
 	int prevY;
 	int posX;
 	int posY;
+	int HP;
+	char weapon;
 };
 
 int main() {
@@ -59,10 +91,16 @@ int main() {
 	struct Kermit kermit;
 	int mapShown = 0;
 	char siteRange = 'S';
-	int W = 0;
-	int H = 0;
+	unsigned int W = 0;
+	unsigned int H = 0;
+	unsigned int moves = 0;
+	unsigned int moveF = 0;
 	int flashlight = 0;
 	unsigned int keys = 0;
+		
+	//Enemy things...:>
+	typedef struct Enemy Enemy;
+	Enemy enemyArr[5];
 	printf("Please specify the width and height of game room... ");
 	scanf_s("%d, %d", &W, &H);
 	if (W < 25) {
@@ -73,6 +111,8 @@ int main() {
 	}
 	positionT test;
 	MapT theMap = createMap(W, H, 20);
+	spawnEnemy(&enemyArr, theMap, &test, &W, &H);
+
 	//Adding some flashlights to the map, if picked up you will recieve some increased sight
 	addFlashlight(theMap, &W, &H, &test, 0, 0);
 	inputT inputVal;
@@ -94,17 +134,20 @@ int main() {
 			theMap.mArr[kermit.posX][kermit.posY] = '@';
 			//Fixin so that Kermit can see 1 radius from him
 			sightRadius(&kermit.posX, &kermit.posY, theMap, 1, siteRange);
-			initFunc(&gameState, theMap, &keys, &flashlight, &W, &H);
+			initFunc(&gameState, theMap, &keys, &flashlight, &W, &H, &kermit.posX, &kermit.posY);
 		}
 		else if (gameState == RUNNING) {
 			//Action set
-			if (flashlight == 1) {
+			if (flashlight == 0) {
+				siteRange = 'S';
+			}
+			else {
 				siteRange = 'M';
 			}
 			updateMap(theMap, &firstEntry);
 			inputVal = getUserInput();
 			sightRadius(&kermit.posX, &kermit.posY, theMap, 0, siteRange);
-			collateralSightCalc(theMap, &H, &W);
+			collateralSightCalc(theMap, &H, &W, &kermit.posX, &kermit.posY);
 			kermit.prevX = kermit.posX;
 			kermit.prevY = kermit.posY;
 
@@ -114,9 +157,23 @@ int main() {
 				drawMap(theMap);
 				inputVal = getUserInput();
 			}
+			if (flashlight == 1) {
+				moveF++;
+				if (moveF >= 14) {
+					moveF = 0;
+					flashlight = 0;
+				}
+			}
+			if (moves % 10 == 0 && moves != 0) {
+				printf("Number of currently moves: | > %d < |", moves);
+				Sleep(1500);
+			}
+			moves++;
 			action(inputVal, &kermit.posX, &kermit.posY, theMap);
+			enemyMove(&enemyArr, theMap, &kermit.posX, &kermit.posY);
 			updateKermitPoss(&kermit.posX, &kermit.posY, &kermit.prevX, &kermit.prevY, theMap);
 			sightRadius(&kermit.posX, &kermit.posY, theMap, 1, siteRange);
+			checkFight(theMap, siteRange, &gameState, &enemyArr);
 		}
 		else if (gameState == MENU) {
 			system("cls");
@@ -134,9 +191,23 @@ int main() {
 		else if (gameState == SAVE) {
 			printf("Saving current game to file....");
 			Sleep(2000);
-			saveScreen(&keys, &flashlight, theMap, &W, &H);
+			saveScreen(&keys, &flashlight, theMap, &W, &H, &kermit.posX, &kermit.posX);
 			printf("Game is saved...\n");
 			gameState = EXIT;
+		}
+		else if (gameState == FIGHT) {
+			int attackerIndex = 0;
+			for (int a = 0; a < 5; a++) {
+				if (enemyArr[a].stance == 1) {
+					attackerIndex = a;
+				}
+			}
+			//Init the screen;
+			//battleScreen();
+			while (&enemyArr[attackerIndex] > 0 || kermit.HP > 0) {
+				printf("Fight progressing....<");
+			}
+
 		}
 	}
 	printf("Game is now closing: Press enter to continue...");
@@ -295,16 +366,16 @@ void addFlashlight(MapT themap, int width, int height, positionT *test, int choi
 	}
 }
 
-void loadScreen(MapT themap, int *key, int *width, int *height, int *flashlight) {
+void loadScreen(MapT themap, int *key, int *width, int *height, int *flashlight, int *kermitX, int *kermitY) {
 	//Add the functions about files	
-	loadFile(themap, &*key, &*width, &*height, &*flashlight);
+	loadFile(themap, &*key, &*width, &*height, &*flashlight, &*kermitX, &*kermitY);
 }
 
-void saveScreen(int *key, int *flashlight, MapT themap, int *width, int *height) {
-	createFile(&*key, &*flashlight, themap,&*width, &*height);
+void saveScreen(int *key, int *flashlight, MapT themap, int *width, int *height, int *kermitX, int *kermitY) {
+	createFile(&*key, &*flashlight, themap,&*width, &*height, &*kermitX, &*kermitY);
 }
 
-void createFile(int *key, int *flashlight, MapT themap, int *width, int *height) {
+void createFile(int *key, int *flashlight, MapT themap, int *width, int *height, int *kermitX, int *kermitY) {
 	char* filename = "MapInfoSAVED.txt";
 	char* keyinfoName = "KeyInfoSAVED.txt";
 	FILE *mapInfo;
@@ -313,17 +384,28 @@ void createFile(int *key, int *flashlight, MapT themap, int *width, int *height)
 	fopen_s(&keyInfo, keyinfoName, "w+");
 	for (int a = 0; a < *width; a++) {
 		for (int b = 0; b < *height; b++) {
-			fprintf(mapInfo, "%c\n", themap.mArr[a][b]);
+			fprintf(mapInfo, "%c", themap.mArr[a][b]);
+			/*fputc(themap.mArr[a][b], mapInfo);*/
+			if (themap.mArr[a][b] == '@') {
+				printf("We found kermit!! pos: %d, %d", a, b);
+				Sleep(1500);
+
+			}
+			fprintf_s(mapInfo, "\n");
 		}
 	}
 	fprintf(keyInfo, "%d\n", *key);
 	fclose(mapInfo);
 	fclose(keyInfo);
 }
-void loadFile(MapT themap, int *key, int *width, int *height) {
+
+void loadFile(MapT themap, int *key, int *width, int *height, int *kermitX, int *kermitY) {
 	FILE* mapFile;
 	FILE* keyFile;
-	char temp;
+	/*themap = createMap(*width, *height, 20);*/
+	char* temp;
+	unsigned char t;
+	temp = malloc(12 * sizeof(char));
 	fopen_s(&mapFile, "MapInfoSAVED.txt", "r");
 	fopen_s(&keyFile, "KeyInfoSAVED.txt", "r");
 	if (mapFile == NULL) {
@@ -335,15 +417,81 @@ void loadFile(MapT themap, int *key, int *width, int *height) {
 		return;
 	}
 	fscanf_s(keyFile, "%d", &*key);
+	fclose(keyFile);
 	for (int a = 0; a < *width; a++) {
 		for (int b = 0; b < *height; b++) {
+			if (feof(mapFile)) {
+				break;
+			}
+			fgets(temp, 12, mapFile);
+			t = temp[0];
+			themap.mArr[a][b] = t;	
+			if (t == '@') {
+				*kermitX = a;
+				*kermitY = b;
+			}
+			/*printf("The current char doing is %c", themap.mArr[a][b]);
+			if (themap.mArr[a][b] == "@") {
+				*kermitX = a;
+				*kermitY = b;
+				Sleep(3000);
+			}*/
 			/*themap.mArr[a][b] = ReadLine(mapFile);*/
-			fscanf_s(mapFile, "%c", &temp);
-			themap.mArr[a][b] = temp;
+			/*fscanf_s(mapFile, "%c\n", &temp);
+			themap.mArr[a][b] = temp;*/
 		}
 	}
+	themap.mArr[*kermitX][*kermitY] = '@';
+	sightRadius(&*kermitX, &*kermitY, themap, 1, 'S');
 	fclose(mapFile);
-	fclose(keyFile);
+}
+
+void spawnEnemy(Enemy *enemyarr, MapT themap, inputT *obj, int *W, int *H) {
+	for (int a = 0; a < 5; a++) {
+		enemyarr[a].HP = 150;
+		enemyarr[a].weapon = 'A';
+		enemyarr[a].x = RandomInteger(1, *W);
+		enemyarr[a].y = RandomInteger(1, *H);
+		enemyarr[a].stance = 0;
+		int succes = placeObject(themap, enemyarr[a].x, enemyarr[a].y, '§', &*obj, 1);
+		//printf("Enemy%d is at (%d, %d)", a, enemyarr[a].x, enemyarr[a].y);
+	}
+}
+
+void enemyMove(Enemy *enemyarr, MapT themap, int *kX, int *kY) {
+	//Makes all enemies move towards Kermit
+	for (int a = 0; a < 5; a++) {
+		int x = enemyarr[a].x;
+		int y = enemyarr[a].y;
+		//ACCES VAOLATIOM?
+		themap.mArr[x][y] = ' ';
+		if (x > *kX+1) {
+			if (themap.mArr[x-1][y] == ' ') {
+				x--;
+			}
+		}
+		else if (x < *kX-1) {
+			if (themap.mArr[x + 1][y] == ' ') {
+				x++;
+			}
+		}
+		else {
+			if (y > *kY) {
+				if (themap.mArr[x][y - 1] == ' ') {
+					y--;
+				}
+			}
+			else if (y < *kY) {
+				if (themap.mArr[x][y + 1] == ' ') {
+					y++;
+				}
+			}
+		}
+		themap.mArr[x][y] = '§';
+		themap.vArr[x][y] = 1;
+		enemyarr[a].y = y;
+		enemyarr[a].x = x;
+	}
 }
 
 int checkOpenDoor(int *kermitX, int *kermitY, MapT themap) {
@@ -421,7 +569,7 @@ int checkWinDoor(int *kermitX, int *kermitY, MapT themap) {
 	}
 }
 
-void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *flashlight){
+void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY){
 	//Shows a screen in which the creator information is being displayed
 	system("cls");
 	printf("Game: Huset\n");
@@ -431,7 +579,7 @@ void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *
 	getchar();
 	printf("\n\nPress enter to go back to the menu");
 	getchar();
-	initFunc(&*gamestate,  theMap, &*keys, &*W, &*H, &*flashlight);
+	initFunc(&*gamestate,  theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY);
 }
 
 void sightRadius(int *kermitX, int *kermitY, MapT themap, int changer, char site) {
@@ -464,9 +612,39 @@ void sightRadius(int *kermitX, int *kermitY, MapT themap, int changer, char site
 	}
 }
 
-void collateralSightCalc(MapT themap, int *height, int *width) {
-	//Goes through the mapArray to see if there is any bugs where items are visable when they shouldn not be
+void checkFight(MapT themap,char site, int *gamestate, Enemy *enemyarr) {
+	int r1 = 0;
+	int k1 = 0;
+	int E1 = 0;
+	int E2 = 0;
+	if (site == 'S') {
+		r1 = -1;
+		k1 = -1;
+		E1 = 2;
+		E2 = 2;
+	}
+	else if (site == 'M') {
+		r1 = -2;
+		k1 = -2;
+		E1 = 3;
+		E2 = 3;
+	}
+	for (int a = 0; a < 5; a++) {
+		for (int r = -1; r < 2; r++) {
+			for (int k = -1; k < E2; k++) {
+				int x = enemyarr[a].x;
+				int y = enemyarr[a].y;
+				if (themap.mArr[ x + r][y + k] == '@') {
+					*gamestate = FIGHT;
+					enemyarr[a].stance = 1;
+				}
+			}
+		}
+	}
+}
 
+void collateralSightCalc(MapT themap, int *height, int *width, int *kermitX, int *kermitY) {
+	//Goes through the mapArray to see if there is any bugs where items are visable when they shouldn not be
 	for (int h = 0; h < *height; h++) {
 		for (int w = 0; w < *width; w++) {
 			if (themap.mArr[h][w] == 'e') {
@@ -475,8 +653,16 @@ void collateralSightCalc(MapT themap, int *height, int *width) {
 			else if (themap.mArr[h][w] == 'M') {
 				themap.vArr[h][w] = 1;
 			}
+			else if (themap.mArr[h][w] == '§') {
+				themap.vArr[h][w] = 1;
+			}
 			else if (themap.vArr[h][w] == 1) {
 				themap.vArr[h][w] = 0;
+			}
+			else if (themap.mArr[h][w] == '@') {
+				if (h != *kermitX || w != *kermitY) {
+					themap.mArr[h][w] = ' ';
+				}
 			}
 		}
 	}
@@ -503,7 +689,7 @@ void updateKermitPoss(int *kermitX, int *kermitY,int *prevX, int *prevY, MapT th
 	themap.vArr[*kermitX][*kermitY] = 1;
 }
 
-void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flashlight) {
+void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY) {
 	//Gives the user some information on how the game works
 	system("cls");
 	int choice = 0;
@@ -516,7 +702,7 @@ void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flas
 	printf("=================================================\nEnter 1 to go back to the meny or 2 to exit: --> ");
 	scanf_s("%d", &choice);
 	if (choice == 1) {
-		initFunc(&gameState, theMap, &*keys, &*W, &*H, &*flashlight);
+		initFunc(&gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY);
 	}
 	else if (choice == 2) {
 		//endfunction
@@ -528,7 +714,7 @@ void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flas
 	}
 }
 
-void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight,int  *W, int *H) {
+void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight,int  *W, int *H, int *kermitX, int *kermitY) {
 	int menuChoice = 0;
 	//fixing menu
 	system("cls");
@@ -549,15 +735,15 @@ void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight,int  *W, i
 		break;
 	case 2:
 		printf("File is being loaded....\n");
-		loadScreen(theMap, &*keys, &*W, &*H, &*flashlight);
+		loadScreen(theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY);
 		Sleep(2000);
 		*gameState = RUNNING;
 		break;
 	case 3:
-		creatorScreen(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight);
+		creatorScreen(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY);
 		break;
 	case 4:
-		howToPlay(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight);
+		howToPlay(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY);
 		break;
 	case 5:
 		*gameState = EXIT;
