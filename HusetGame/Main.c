@@ -45,12 +45,16 @@ typedef struct Enemy {
 	int HP;
 	int x;
 	int y;
+	int dead;
 	//Weapons go from S - A - B - C - D - E
 	char weapon;
 	int stance; //In attack: 1 if not 0;
 } Enemy;
 
 void spawnEnemy(Enemy *enemyarr, MapT themap, inputT *obj, int *W, int *H);
+void addShop(MapT themap, int width, int height, positionT *test);
+void shopNearby(int *kermitX, int *kermitY, MapT themap);
+void shopScreen(MapT themap, int *kermitX, int *kermitY);
 void loadScreen(MapT themap, int *key, int *width, int *height, int *flashlight, int *kermitX, int *kermitY);
 void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY);
 void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight, int  *W, int *H, int *kermitX, int *kermitY);
@@ -119,11 +123,12 @@ int main() {
 
 	//Adding some flashlights to the map, if picked up you will recieve some increased sight
 	addFlashlight(theMap, &W, &H, &test, 0, 0);
+	addShop(theMap, &W, &H, &test, 0, 0);
 	inputT inputVal;
 
 	while (TRUE) {
 		if (gameState == INIT) {
-			int testVar = 0;
+			int loopvalue = 0;
 			kermit.posX = W / 2 - 1;
 			kermit.posY = H / 2 - 1;
 			//adding default weapon
@@ -131,13 +136,13 @@ int main() {
 			kermit.weapons[0] = t;
 			kermit.weapons[1] = '\0';
 			while (theMap.mArr[kermit.posX][kermit.posY] != ' ') {
-				if (testVar == 4) {
-					kermit.posX += 1;
+				if (loopvalue == 4) {
+					kermit.posX++;
 				}
 				else {
-					kermit.posY += 1;
+					kermit.posY++;
 				}
-				testVar += 1;
+				loopvalue++;
 			}
 			theMap.mArr[kermit.posX][kermit.posY] = '@';
 			//Fixin so that Kermit can see 1 radius from him
@@ -153,6 +158,7 @@ int main() {
 				siteRange = 'M';
 			}
 			updateMap(theMap, &firstEntry);
+			shopNearby(&kermit.posX, &kermit.posY, theMap);
 			inputVal = getUserInput();
 			sightRadius(&kermit.posX, &kermit.posY, theMap, 0, siteRange);
 			collateralSightCalc(theMap, &H, &W, &kermit.posX, &kermit.posY);
@@ -233,61 +239,62 @@ int main() {
 			int choice = 0;
 			printf("Please enter the proper index for your weapon choice: ");
 			scanf_s("%d", &choice);
-			while (choice > invSize) {
+			while (choice > invSize || choice < invSize - 1) {
 				printf("\nNot a valid weaponIndex, Try again.\n Value: ");
 				scanf_s("%d", &choice);
 			}
 			kermit.currentWeapon = kermit.weapons[choice];
 			printf("Your current weaponclass is %c\n", kermit.currentWeapon);
+			if (kermit.currentWeapon == 'S') {
+				damage = 35;
+			}
+			else if (kermit.currentWeapon == 'A') {
+				damage = 30;
+			}
+			else if (kermit.currentWeapon == 'B') {
+				damage = 25;
+			}
+			else if (kermit.currentWeapon == 'C') {
+				damage = 20;
+			}
+			else if (kermit.currentWeapon == 'D') {
+				damage = 15;
+			}
+			else if (kermit.currentWeapon == 'E') {
+				damage = 10;
+			}
+
+			if (enemyArr[attackerIndex].weapon == 'S') {
+				enemyDmg = 35;
+			}
+			else if (enemyArr[attackerIndex].weapon == 'A') {
+				enemyDmg = 30;
+			}
+			else if (enemyArr[attackerIndex].weapon == 'B') {
+				enemyDmg = 25;
+			}
+			else if (enemyArr[attackerIndex].weapon == 'C') {
+				enemyDmg = 20;
+			}
+			else if (enemyArr[attackerIndex].weapon == 'D') {
+				enemyDmg = 15;
+			}
+			else if (enemyArr[attackerIndex].weapon == 'E') {
+				enemyDmg = 10;
+			}
 			//gameloop
-			while (!kermit.HP < 1 || !enemyArr[attackerIndex].HP < 1) {
+			while (kermit.HP > 0 || enemyArr[attackerIndex].HP > 0) {
+				if (kermit.HP < 1 || enemyArr[attackerIndex].HP < 1) {
+					break;
+				}
 				system("cls");
 				printf("Your HP: %d \t\t\t\t Enemy HP: %d\n", kermit.HP, enemyArr[attackerIndex].HP);
 				printf("Current WeaponClass: %c \t\t\t Current enemy weaponclass: %c\n\n", kermit.currentWeapon, enemyArr[attackerIndex].weapon);
 
-				if (kermit.currentWeapon = 'S') {
-					damage = 35;
-				}
-				else if (kermit.currentWeapon = 'A') {
-					damage = 30;
-				}
-				else if (kermit.currentWeapon = 'B') {
-					damage = 25;
-				}
-				else if (kermit.currentWeapon = 'C') {
-					damage = 20;
-				}
-				else if (kermit.currentWeapon = 'D') {
-					damage = 15;
-				}
-				else if (kermit.currentWeapon = 'E') {
-					damage = 10;
-				}
-
-				if (enemyArr[attackerIndex].weapon = 'S') {
-					enemyDmg = 35;
-				}
-				else if (enemyArr[attackerIndex].weapon = 'A') {
-					enemyDmg = 30;
-				}
-				else if (enemyArr[attackerIndex].weapon = 'B') {
-					enemyDmg = 25;
-				}
-				else if (enemyArr[attackerIndex].weapon = 'C') {
-					enemyDmg = 20;
-				}
-				else if (enemyArr[attackerIndex].weapon = 'D') {
-					enemyDmg = 15;
-				}
-				else if (enemyArr[attackerIndex].weapon = 'E') {
-					enemyDmg = 10;
-				}
-				/*playerAttack(&damage);
-				enemyAttack();*/
 				printf("Please choose attackmove: \n");
 				int attackChoice = 0;
 
-				printf("1: Quick Attack\n2: Heavy Attack");
+				printf("1: Quick Attack\n2: Heavy Attack \n Choice: ");
 				scanf_s("%d", &attackChoice);
 				while (attackChoice < 1 || attackChoice > 2) {
 					printf("Not a valid attackmove, please try again: ");
@@ -314,16 +321,41 @@ int main() {
 						break;
 					}
 				}
-				printf("Enemy is attacking with quick attack...");
-				kermit.HP -= enemyDmg;
-				printf("You lost %d heath. Current heath: %d", enemyDmg, kermit.HP);
+				int enemyattackChoice = 0;
+				int randnum = 0;
+				enemyattackChoice = RandomInteger(2, 3);
+				if (enemyattackChoice == 2) {
+					printf("\nEnemy is attacking with quick attack...");
+					kermit.HP -= enemyDmg;
+					printf("\nYou lost %d heath. Current heath: %d", enemyDmg, kermit.HP);
+					Sleep(1500);
+				}
+				else {
+					printf("\nEnemy is attacking with heavy attack...");
+					randnum = RandomInteger(1, 2);
+					if (randnum == 1) {
+						kermit.HP -= 2*enemyDmg;
+						printf("\nYou lost %d heath. Current heath: %d", enemyDmg, kermit.HP);
+						Sleep(1500);
+					}
+					else {
+						printf("\nThe enemy missed you! How lucky!?");
+						Sleep(1500);
+					}
+				}
 			}
 			if (kermit.HP < 1) {
 				gameState = EXIT;
+				break;
 			}
 			else if (enemyArr[attackerIndex].HP < 1) {
 				//delete the enemy
+				/*for (int c = attackerIndex - 1; c < 5 - 1; c++)
+					enemyArr[c] = enemyArr[c + 1];*/
+				enemyArr[attackerIndex].dead = 1;
+				theMap.mArr[enemyArr[attackerIndex].x][enemyArr[attackerIndex].y] = ' ';
 				gameState = RUNNING;
+				continue;
 			}
 		}
 	}
@@ -487,6 +519,49 @@ int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, i
 	return 0;
 }
 
+void addShop(MapT themap, int width, int height, positionT *test) {
+	char inputval = 'B';
+	int succes = placeObject(themap, 0, 0, inputval, &*test, 1);
+}
+
+void shopNearby(int *kermitX, int *kermitY, MapT themap) {
+	int r = -1;
+	int k = 0;
+	int temp = 0;
+	int index = 0;
+	for (int t = 0; t < 4; t++) {
+		if (themap.mArr[*kermitX + r][*kermitY + k] == 'B') {
+			int answer = 0;
+			printf("Would you like to enter the Shop?\n 0/1 (No/yes) Answer: ");
+			scanf_s("%d", &answer);
+			while (answer < 0 || answer > 1) {
+				printf("Not a valid answer, try again. ");
+				scanf_s("%d", &answer);
+			}
+			if (answer == 1) {
+				shopScreen(themap, &*kermitX, &*kermitY);
+			}
+		}
+		else {
+			if (index == 1) {
+				k -= (2 * k);
+			}
+			else {
+				temp = r;
+				r = k;
+				k = temp;
+			}
+		}
+		index++;
+	}
+}
+
+void shopScreen(MapT themap,int *kermitX, int *kermitY) {
+	//make a structure to store all the item for the shop to sell then loop throught i in here
+	printf("Entering the shop screen....");
+	Sleep(4500);
+}
+	
 void addFlashlight(MapT themap, int width, int height, positionT *test, int choiceX, int choiceY) {
 	//posX and posY is for specifical cases
 	int posX = choiceX;
@@ -583,14 +658,25 @@ void loadFile(MapT themap, int *key, int *width, int *height, int *kermitX, int 
 }
 
 void spawnEnemy(Enemy *enemyarr, MapT themap, inputT *obj, int *W, int *H) {
+	// init all values for enemy object
 	for (int a = 0; a < 5; a++) {
 		enemyarr[a].HP = 150;
-		enemyarr[a].weapon = 'A';
-		enemyarr[a].x = RandomInteger(1, *W);
-		enemyarr[a].y = RandomInteger(1, *H);
+		enemyarr[a].weapon = 'E';
+		enemyarr[a].x = RandomInteger(4, *W - 5);
+		enemyarr[a].y = RandomInteger(4, *H - 5);
+		enemyarr[a].dead = 0;
+		int loopvalue = 0;
+		while (themap.mArr[enemyarr[a].x][enemyarr[a].y] != ' ') {
+			if (loopvalue == 4) {
+				enemyarr[a].x++;
+			}
+			else {
+				enemyarr[a].y++;
+			}
+			loopvalue++;
+		}
 		enemyarr[a].stance = 0;
 		int succes = placeObject(themap, enemyarr[a].x, enemyarr[a].y, '§', &*obj, 1);
-		//printf("Enemy%d is at (%d, %d)", a, enemyarr[a].x, enemyarr[a].y);
 	}
 }
 
@@ -766,6 +852,9 @@ void checkFight(MapT themap,char site, int *gamestate, Enemy *enemyarr) {
 		E2 = 3;
 	}
 	for (int a = 0; a < 5; a++) {
+		if (enemyarr[a].dead == 1) {
+			continue;
+		}
 		for (int r = -1; r < 2; r++) {
 			for (int k = -1; k < E2; k++) {
 				int x = enemyarr[a].x;
@@ -790,6 +879,9 @@ void collateralSightCalc(MapT themap, int *height, int *width, int *kermitX, int
 				themap.vArr[h][w] = 1;
 			}
 			else if (themap.mArr[h][w] == '§') {
+				themap.vArr[h][w] = 1;
+			}
+			else if (themap.mArr[h][w] == 'B') {
 				themap.vArr[h][w] = 1;
 			}
 			else if (themap.vArr[h][w] == 1) {
