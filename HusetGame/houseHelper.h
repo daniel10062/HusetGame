@@ -36,8 +36,6 @@ struct userPosition {
 };
 typedef struct userPosition positionT;
 
-
-
 /********************************************************************
 Function: placeObject()
 Usage: int success = placeObject(theMap, xPos, yPos,chr,posReceived,success);
@@ -64,5 +62,4 @@ mObj (of type mapObjectT). If successful they are given the appropriate
 values, otherwhise both are set to -1.
 ********************************************************************/
 inputT getUserInput(void);
-
 #endif

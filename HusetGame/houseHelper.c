@@ -78,4 +78,3 @@ inputT getUserInput(void)
 	free(objectStr);
 	return inpObj;
 }
-
