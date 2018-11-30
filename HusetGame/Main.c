@@ -51,10 +51,14 @@ typedef struct Enemy {
 	int stance; //In attack: 1 if not 0;
 } Enemy;
 
+struct Shop {
+	char items[30][50 + 1];
+};
+
 void spawnEnemy(Enemy *enemyarr, MapT themap, inputT *obj, int *W, int *H);
-void addShop(MapT themap, int width, int height, positionT *test);
-void shopNearby(int *kermitX, int *kermitY, MapT themap);
-void shopScreen(MapT themap, int *kermitX, int *kermitY);
+void addShop(MapT themap,positionT *test);
+void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struct Kermit kermit);
+void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struct Kermit kermit);
 void loadScreen(MapT themap, int *key, int *width, int *height, int *flashlight, int *kermitX, int *kermitY);
 void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY);
 void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight, int  *W, int *H, int *kermitX, int *kermitY);
@@ -94,6 +98,7 @@ int main() {
 	gameState = INIT;
 	int firstEntry = TRUE;
 	typedef struct houseMap MapT;
+	struct Shop Shop;
 	struct Kermit kermit;
 	kermit.HP = 150;
 	//Giving a start Sword for Kermit
@@ -105,7 +110,22 @@ int main() {
 	unsigned int moveF = 0;
 	int flashlight = 0;
 	unsigned int keys = 0;
-		
+	//shop items
+	
+	//-----------------------------------------------------------
+
+	const char *testchar[100];
+	int cost = 100;
+	testchar[0] = "Cost: 75 coins --> Red Flask";
+	testchar[1] = "Cost: 150 coins --> Sword Class B";
+	testchar[2] = "Cost 100 coins --> Fire Sword S";
+	testchar[3] = "Cost 125 coins --> Ice Sword S";
+	for (int a = 0; a < 4; a++) {
+		strcpy_s(Shop.items[a], sizeof(Shop.items[a]), testchar[a]);
+	}
+
+	//-----------------------------------------------------------
+
 	//Enemy things...:>
 	typedef struct Enemy Enemy;
 	Enemy enemyArr[5];
@@ -123,7 +143,7 @@ int main() {
 
 	//Adding some flashlights to the map, if picked up you will recieve some increased sight
 	addFlashlight(theMap, &W, &H, &test, 0, 0);
-	addShop(theMap, &W, &H, &test, 0, 0);
+	addShop(theMap,&test);
 	inputT inputVal;
 
 	while (TRUE) {
@@ -158,7 +178,7 @@ int main() {
 				siteRange = 'M';
 			}
 			updateMap(theMap, &firstEntry);
-			shopNearby(&kermit.posX, &kermit.posY, theMap);
+			shopNearby(&kermit.posX, &kermit.posY, theMap, Shop, kermit);
 			inputVal = getUserInput();
 			sightRadius(&kermit.posX, &kermit.posY, theMap, 0, siteRange);
 			collateralSightCalc(theMap, &H, &W, &kermit.posX, &kermit.posY);
@@ -519,12 +539,12 @@ int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, i
 	return 0;
 }
 
-void addShop(MapT themap, int width, int height, positionT *test) {
+void addShop(MapT themap, positionT *test) {
 	char inputval = 'B';
 	int succes = placeObject(themap, 0, 0, inputval, &*test, 1);
 }
 
-void shopNearby(int *kermitX, int *kermitY, MapT themap) {
+void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struct Kermit kermit) {
 	int r = -1;
 	int k = 0;
 	int temp = 0;
@@ -539,7 +559,14 @@ void shopNearby(int *kermitX, int *kermitY, MapT themap) {
 				scanf_s("%d", &answer);
 			}
 			if (answer == 1) {
-				shopScreen(themap, &*kermitX, &*kermitY);
+				shopScreen(themap, &*kermitX, &*kermitY, Shop, kermit);
+				if (r > 0 || r < 0) {
+					*kermitY += r;
+				}
+				else {
+					*kermitX += k;
+				}
+				themap.mArr[*kermitX][*kermitY] = '@';
 			}
 		}
 		else {
@@ -556,10 +583,38 @@ void shopNearby(int *kermitX, int *kermitY, MapT themap) {
 	}
 }
 
-void shopScreen(MapT themap,int *kermitX, int *kermitY) {
+void shopScreen(MapT themap,int *kermitX, int *kermitY, struct Shop Shop, struct Kermit kermit) {
 	//make a structure to store all the item for the shop to sell then loop throught i in here
 	printf("Entering the shop screen....");
-	Sleep(4500);
+	printf("\t\t\t\t\t\t Your coins: ???\n");
+	int index = 0;
+	for (int a = 0; a < 4; a++) {
+		printf("%d: %s\n",index, Shop.items[a]);
+		index++;
+	}
+	int choice = 0;
+	printf("Please specify the type you want to buy with the right index!\nAnswer: "); 
+	scanf_s("%d", &choice);
+	while (choice < 0 || choice > 3) {
+		printf("Not a valid index... Try again. --> ");
+		scanf_s("%d", &choice);
+	}
+	switch (choice) {
+	case 0:
+		kermit.weapons[1] = 'E';
+		kermit.weapons[2] = '\0';
+		// check if money matches the curretn weapon cost
+		// minus the cost 
+		printf("There you go, a brand new sword with the class E");
+	case 1:
+		break;
+	case 2:
+		break;
+	case 3:
+		break;
+	case 4:
+		break;
+	}
 }
 	
 void addFlashlight(MapT themap, int width, int height, positionT *test, int choiceX, int choiceY) {
