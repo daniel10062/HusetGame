@@ -11,9 +11,8 @@
 //defines
 #define TRUE 1
 
-
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>|
-//	 GAME IS CURRENTLY WORKING: VERSION OF GAME 1.0		|
+//	 GAME IS CURRENTLY WORKING: VERSION OF GAME 1.2		|
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>|
 
 /* -----> Current Working Problem <-----
@@ -57,8 +56,9 @@ struct Shop {
 
 void spawnEnemy(Enemy *enemyarr, MapT themap, inputT *obj, int *W, int *H);
 void addShop(MapT themap,positionT *test);
-void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struct Kermit kermit);
-void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struct Kermit kermit);
+void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struct Kermit *kermit);
+void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struct Kermit *kermit);
+void addCoins(MapT themap, positionT *test);
 void loadScreen(MapT themap, int *key, int *width, int *height, int *flashlight, int *kermitX, int *kermitY);
 void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY);
 void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight, int  *W, int *H, int *kermitX, int *kermitY);
@@ -78,7 +78,6 @@ void createFile(int *key, int *flashlight, MapT themap, int *width, int *height,
 void checkFight(MapT themap,char site, int *gamestate, Enemy *enemyarr);
 //void enemyMove(Enemy *enemyarr, MapT themap, int *kX, int *kY);
 void loadFile(MapT themap, int *key, int *width, int *height, int *kermitX, int *kermitY);
-//void append(char *s, char c);
 
 struct Kermit {
 	int prevX;
@@ -108,6 +107,7 @@ int main() {
 	unsigned int H = 0;
 	unsigned int moves = 0;
 	unsigned int moveF = 0;
+	int coins = 100;
 	int flashlight = 0;
 	unsigned int keys = 0;
 	//shop items
@@ -144,6 +144,7 @@ int main() {
 	//Adding some flashlights to the map, if picked up you will recieve some increased sight
 	addFlashlight(theMap, &W, &H, &test, 0, 0);
 	addShop(theMap,&test);
+	addCoins(theMap, &test);
 	inputT inputVal;
 
 	while (TRUE) {
@@ -178,14 +179,15 @@ int main() {
 				siteRange = 'M';
 			}
 			updateMap(theMap, &firstEntry);
-			shopNearby(&kermit.posX, &kermit.posY, theMap, Shop, kermit);
+			shopNearby(&kermit.posX, &kermit.posY, theMap, Shop, &kermit, &coins);
+			printf("Current coin value: %d\n", coins);
 			inputVal = getUserInput();
 			sightRadius(&kermit.posX, &kermit.posY, theMap, 0, siteRange);
 			collateralSightCalc(theMap, &H, &W, &kermit.posX, &kermit.posY);
 			kermit.prevX = kermit.posX;
 			kermit.prevY = kermit.posY;
 
-			while (checkActionValid(inputVal, &kermit.posX, &kermit.posY, theMap, &keys, &gameState, &flashlight) < 1) {
+			while (checkActionValid(inputVal, &kermit.posX, &kermit.posY, theMap, &keys, &gameState, &flashlight, &coins) < 1) {
 				system("cls");
 				sightRadius(&kermit.posX, &kermit.posY, theMap, 1, siteRange);
 				drawMap(theMap);
@@ -240,9 +242,9 @@ int main() {
 			system("cls");
 			int attackerIndex = 0;
 			for (int a = 0; a < 5; a++) {
-				if (enemyArr[a].stance == 1) {
+				if (enemyArr[a].stance == 1 && enemyArr[a].dead != 1) {
 					attackerIndex = a;
-					printf("The attacker is: %d", a);
+					printf("The attacker is: %d\n", a);
 					Sleep(1500);
 				}
 			}
@@ -384,26 +386,14 @@ int main() {
 	return 0;
 }
 
-//void playerAttack(int damage, ) {
-//	printf("Please choose attackmove:");
-//	int attackChoice = 0;
-//	
-//	printf("1: Quick Attack\n2: Heavy Attack");
-//	scanf_s("%d", &attackChoice);
-//	switch (attackChoice) {
-//	case 1:
-//
-//	}
-//}
-//append function
+void addCoins(MapT themap, positionT *test) {
+	char inputval = 'C';
+	for (int i = 0; i < 10; i++) {
+		int succes = placeObject(themap, 0, 0, inputval, &*test, 1);
+	}
+}
 
-//void append(char *s, char c) {
-//	int len = strlen(s);
-//	s[len] = c;
-//	s[len + 1] = '\0';
-//}	
-
-int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, int *keys, int *gamestate, int *flashlight) {
+int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, int *keys, int *gamestate, int *flashlight, int *coins) {
 	if (inputVal.mObj == 2) {
 		if (themap.mArr[*kermitX - 1][*kermitY] == ' ') {
 			return 1;
@@ -417,6 +407,9 @@ int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, i
 		}
 		else if (checkIfMoveFlashlight(&*kermitX, &*kermitY, themap, &*flashlight) == 1) {
 			*flashlight = 1;
+			return 1;
+		}
+		else if (checkIfMoveCoins(&*kermitX, &*kermitY, themap, &*coins) == 1) {
 			return 1;
 		}
 	}
@@ -435,6 +428,9 @@ int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, i
 			*flashlight = 1;
 			return 1;
 		}
+		else if (checkIfMoveCoins(&*kermitX, &*kermitY, themap, &*coins) == 1) {
+			return 1;
+		}
 	}
 	else if (inputVal.mObj == 4) {
 		if (themap.mArr[*kermitX][*kermitY - 1] == ' ') {
@@ -451,6 +447,9 @@ int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, i
 			*flashlight = 1;
 			return 1;
 		}
+		else if (checkIfMoveCoins(&*kermitX, &*kermitY, themap, &*coins) == 1) {
+			return 1;
+		}
 	}
 	else if (inputVal.mObj == 5) {
 		if (themap.mArr[*kermitX][*kermitY + 1] == ' ') {
@@ -465,6 +464,9 @@ int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, i
 		}
 		else if (checkIfMoveFlashlight(&*kermitX, &*kermitY, themap, &*flashlight) == 1) {
 			*flashlight = 1;
+			return 1;
+		}
+		else if (checkIfMoveCoins(&*kermitX, &*kermitY, themap, &*coins) == 1) {
 			return 1;
 		}
 	}
@@ -541,10 +543,12 @@ int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, i
 
 void addShop(MapT themap, positionT *test) {
 	char inputval = 'B';
-	int succes = placeObject(themap, 0, 0, inputval, &*test, 1);
+	for (int a = 0; a < 3; a++) {
+		int succes = placeObject(themap, 0, 0, inputval, &*test, 1);
+	}
 }
 
-void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struct Kermit kermit) {
+void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struct Kermit *kermit, int *coins) {
 	int r = -1;
 	int k = 0;
 	int temp = 0;
@@ -559,7 +563,7 @@ void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struc
 				scanf_s("%d", &answer);
 			}
 			if (answer == 1) {
-				shopScreen(themap, &*kermitX, &*kermitY, Shop, kermit);
+				shopScreen(themap, &*kermitX, &*kermitY, Shop, &(*kermit), &*coins);
 				if (r > 0 || r < 0) {
 					*kermitY += r;
 				}
@@ -567,6 +571,14 @@ void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struc
 					*kermitX += k;
 				}
 				themap.mArr[*kermitX][*kermitY] = '@';
+			}
+			else {
+				if (r > 0 || r < 0) {
+					*kermitY += r;
+				}
+				else {
+					*kermitX += k;
+				}
 			}
 		}
 		else {
@@ -583,11 +595,12 @@ void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struc
 	}
 }
 
-void shopScreen(MapT themap,int *kermitX, int *kermitY, struct Shop Shop, struct Kermit kermit) {
+void shopScreen(MapT themap,int *kermitX, int *kermitY, struct Shop Shop,struct Kermit *kermit, int *coins) {
 	//make a structure to store all the item for the shop to sell then loop throught i in here
 	printf("Entering the shop screen....");
-	printf("\t\t\t\t\t\t Your coins: ???\n");
+	printf("\t\t\t\t\t\t Your coins: %d\n",*coins);
 	int index = 0;
+	char temp;
 	for (int a = 0; a < 4; a++) {
 		printf("%d: %s\n",index, Shop.items[a]);
 		index++;
@@ -601,11 +614,23 @@ void shopScreen(MapT themap,int *kermitX, int *kermitY, struct Shop Shop, struct
 	}
 	switch (choice) {
 	case 0:
-		kermit.weapons[1] = 'E';
-		kermit.weapons[2] = '\0';
+		temp = 'E';
+		/*for (int a = 0; a < strlen(kermit.weapons); a++) {
+			if (kermit.weapons[a] == '\0') {
+				kermit.weapons[a] = temp;
+				kermit.weapons[a + 1] = '\0';
+			}
+		}*/
+		kermit->weapons[1] = temp;
+		kermit->weapons[2] = '\0';
+		for (int a = 0; a < strlen(kermit->weapons); a++) {
+			printf("The weapons: %c", kermit->weapons[a]);
+		}
+		*coins -= 20;
 		// check if money matches the curretn weapon cost
 		// minus the cost 
 		printf("There you go, a brand new sword with the class E");
+		Sleep(2500);
 	case 1:
 		break;
 	case 2:
@@ -821,6 +846,32 @@ int checkIfMoveFlashlight(int *kermitX, int *kermitY, MapT themap, int *flashlig
 	return 0;
 }
 
+int checkIfMoveCoins(int *kermitX, int *kermitY, MapT themap, int *coins) {
+	int r = -1;
+	int k = 0;
+	int temp = 0;
+	int index = 0;
+	for (int t = 0; t < 4; t++) {
+		if (themap.mArr[*kermitX + r][*kermitY + k] == 'C') {
+			*coins += 50;
+			return 1;
+		}
+		else {
+			if (index == 1) {
+				k -= (2 * k);
+			}
+			else {
+				temp = r;
+				r = k;
+				k = temp;
+			}
+		}
+		index++;
+	}
+	return 0;
+}
+
+
 int checkWinDoor(int *kermitX, int *kermitY, MapT themap) {
 	int r = -1;
 	int k = 0;
@@ -937,6 +988,9 @@ void collateralSightCalc(MapT themap, int *height, int *width, int *kermitX, int
 				themap.vArr[h][w] = 1;
 			}
 			else if (themap.mArr[h][w] == 'B') {
+				themap.vArr[h][w] = 1;
+			}
+			else if (themap.mArr[h][w] == 'C') {
 				themap.vArr[h][w] = 1;
 			}
 			else if (themap.vArr[h][w] == 1) {
