@@ -56,8 +56,8 @@ struct Shop {
 
 void spawnEnemy(Enemy *enemyarr, MapT themap, inputT *obj, int *W, int *H);
 void addShop(MapT themap,positionT *test);
-void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struct Kermit *kermit);
-void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struct Kermit *kermit);
+void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struct Kermit *kermit, int *coins);
+void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struct Kermit *kermit, int *coins);
 void addCoins(MapT themap, positionT *test);
 void loadScreen(MapT themap, int *key, int *width, int *height, int *flashlight, int *kermitX, int *kermitY);
 void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY);
@@ -67,7 +67,7 @@ void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flas
 void action(inputT inputVal, int *kermitX, int *kermitY, MapT themap);
 void updateKermitPoss(int *kermitX, int *kermitY, int *prevX, int *prevY, MapT themap);
 void sightRadius(int *kermitX, int *kermitY, MapT themap, int changer, char siteRange);
-int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, int *keys, int *gamestate, int *flashlight);
+int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, int *keys, int *gamestate, int *flashlight, int *coins);
 int checkOpenDoor(int *kermitX, int *kermitY, MapT themap);
 int checkWinDoor(int *kermitX, int *kermitY, MapT themap);
 void collateralSightCalc(MapT themap, int *height, int *width, int *kermitX, int *kermitY);
@@ -86,6 +86,7 @@ struct Kermit {
 	int posY;
 	int HP;
 	char weapons[100];
+	char flasks[40][41];
 	char currentWeapon;
 };
 
@@ -109,13 +110,14 @@ int main() {
 	unsigned int moveF = 0;
 	int coins = 100;
 	int flashlight = 0;
-	unsigned int keys = 0;
+
+	//debug mode!
+	unsigned int keys = 4;
 	//shop items
 	
 	//-----------------------------------------------------------
 
 	const char *testchar[100];
-	int cost = 100;
 	testchar[0] = "Cost: 75 coins --> Red Flask";
 	testchar[1] = "Cost: 150 coins --> Sword Class B";
 	testchar[2] = "Cost 100 coins --> Fire Sword S";
@@ -153,7 +155,7 @@ int main() {
 			kermit.posX = W / 2 - 1;
 			kermit.posY = H / 2 - 1;
 			//adding default weapon
-			char t = 'A';
+			char t = 'S';
 			kermit.weapons[0] = t;
 			kermit.weapons[1] = '\0';
 			while (theMap.mArr[kermit.posX][kermit.posY] != ' ') {
@@ -254,11 +256,11 @@ int main() {
 			Sleep(1000);
 			//int invSize = sizeof(kermit.weapons) / sizeof(kermit.weapons[0]);
 			int invSize = strlen(kermit.weapons);
+			int choice = 0;
 			for (int i = 0; i < invSize; i++) {
 				printf("Please choose from your inventory ---> \n");
 				printf("%d: Weapon Class %c\n", i, kermit.weapons[i]);
 			}
-			int choice = 0;
 			printf("Please enter the proper index for your weapon choice: ");
 			scanf_s("%d", &choice);
 			while (choice > invSize || choice < invSize - 1) {
@@ -267,6 +269,7 @@ int main() {
 			}
 			kermit.currentWeapon = kermit.weapons[choice];
 			printf("Your current weaponclass is %c\n", kermit.currentWeapon);
+
 			if (kermit.currentWeapon == 'S') {
 				damage = 35;
 			}
@@ -285,6 +288,10 @@ int main() {
 			else if (kermit.currentWeapon == 'E') {
 				damage = 10;
 			}
+			else if (kermit.currentWeapon == 'F') {
+				damage = 5;
+			}
+			
 
 			if (enemyArr[attackerIndex].weapon == 'S') {
 				enemyDmg = 35;
@@ -304,21 +311,32 @@ int main() {
 			else if (enemyArr[attackerIndex].weapon == 'E') {
 				enemyDmg = 10;
 			}
+			else if (kermit.currentWeapon == 'F') {
+				damage = 5;
+			}
+			
 			//gameloop
 			while (kermit.HP > 0 || enemyArr[attackerIndex].HP > 0) {
 				if (kermit.HP < 1 || enemyArr[attackerIndex].HP < 1) {
 					break;
 				}
+				char *lookWord = malloc(24 * sizeof(char));
+				/*char lookWord[20];*/
+				int flaskchoice = 0;
+				int numberOfItems = 0;
+				int switchRun = 0;
+				int forceBack = 0;
+				unsigned char testingChar;
 				system("cls");
 				printf("Your HP: %d \t\t\t\t Enemy HP: %d\n", kermit.HP, enemyArr[attackerIndex].HP);
 				printf("Current WeaponClass: %c \t\t\t Current enemy weaponclass: %c\n\n", kermit.currentWeapon, enemyArr[attackerIndex].weapon);
 
-				printf("Please choose attackmove: \n");
+				printf("Please choose move: \n");
 				int attackChoice = 0;
 
-				printf("1: Quick Attack\n2: Heavy Attack \n Choice: ");
+				printf("1: Quick Attack\n2: Heavy Attack\n3: Usables\n Choice: ");
 				scanf_s("%d", &attackChoice);
-				while (attackChoice < 1 || attackChoice > 2) {
+				while (attackChoice < 1 || attackChoice > 3) {
 					printf("Not a valid attackmove, please try again: ");
 					scanf_s("%d", &attackChoice);
 				}
@@ -342,6 +360,54 @@ int main() {
 						Sleep(1500);
 						break;
 					}
+				case 3:
+					//make a screen where it shows all flasks availible
+					system("cls");
+					switchRun = 1;
+					char *assign[100];
+					for (int n = 0; n < (sizeof(kermit.flasks) / sizeof(kermit.flasks[0])); n++) {
+						testingChar = kermit.flasks[n][0];
+						if (isalpha(testingChar)) {
+							numberOfItems++;
+							printf("Item %d: %s\n", n + 1, kermit.flasks[n]);
+						}
+					}
+					if (numberOfItems == 0) {
+						printf("You had no items in your inventory\n");
+						Sleep(2500);
+						break;
+					}
+					printf("Please choose Item: ");
+					scanf_s("%d", &flaskchoice);
+					while (flaskchoice < 1 || flaskchoice > strlen(kermit.flasks)) {
+						printf("Not a valid number, try again: ");
+						scanf_s("%d", &flaskchoice);
+					}
+					switch (flaskchoice) {
+					case 1: 
+						forceBack = 1;
+						switchRun = 1;
+						for (int a = 0; a < strlen(kermit.flasks[flaskchoice - 1]); a++) {
+							if (kermit.flasks[flaskchoice - 1][a] == ' ') {
+								lookWord[a] = '\0';
+								break;
+							}
+							lookWord[a] = kermit.flasks[flaskchoice - 1][a];
+						}
+						if (strcmp("Healing", lookWord) == 0) {
+							assign[0] = ' ';
+							strcpy_s(kermit.flasks[flaskchoice - 1], sizeof(kermit.flasks[flaskchoice - 1]), assign);
+							kermit.HP += 50;
+							printf("Great job, you healed for 50 HP!\n");
+							Sleep(2500);
+						}
+						break;
+					}
+					break;
+				}
+				if ((numberOfItems == 0 && switchRun == 1) || forceBack == 1) {
+					switchRun = 0;
+					continue;
 				}
 				int enemyattackChoice = 0;
 				int randnum = 0;
@@ -556,7 +622,7 @@ void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struc
 	for (int t = 0; t < 4; t++) {
 		if (themap.mArr[*kermitX + r][*kermitY + k] == 'B') {
 			int answer = 0;
-			printf("Would you like to enter the Shop?\n 0/1 (No/yes) Answer: ");
+			printf("Would you like to enter the Shop?\n 1/0 (yes/no) Answer: ");
 			scanf_s("%d", &answer);
 			while (answer < 0 || answer > 1) {
 				printf("Not a valid answer, try again. ");
@@ -579,6 +645,7 @@ void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struc
 				else {
 					*kermitX += k;
 				}
+				themap.mArr[*kermitX][*kermitY] = '@';
 			}
 		}
 		else {
@@ -595,12 +662,13 @@ void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struc
 	}
 }
 
-void shopScreen(MapT themap,int *kermitX, int *kermitY, struct Shop Shop,struct Kermit *kermit, int *coins) {
+void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struct Kermit *kermit, int *coins) {
 	//make a structure to store all the item for the shop to sell then loop throught i in here
 	printf("Entering the shop screen....");
-	printf("\t\t\t\t\t\t Your coins: %d\n",*coins);
+	printf("\t\t\t\t\t\t Your coins: %d\n", *coins);
 	int index = 0;
-	char temp;
+	char *temp[100];
+	char singlechar;
 	for (int a = 0; a < 4; a++) {
 		printf("%d: %s\n",index, Shop.items[a]);
 		index++;
@@ -614,24 +682,33 @@ void shopScreen(MapT themap,int *kermitX, int *kermitY, struct Shop Shop,struct 
 	}
 	switch (choice) {
 	case 0:
-		temp = 'E';
-		/*for (int a = 0; a < strlen(kermit.weapons); a++) {
-			if (kermit.weapons[a] == '\0') {
-				kermit.weapons[a] = temp;
-				kermit.weapons[a + 1] = '\0';
-			}
-		}*/
-		kermit->weapons[1] = temp;
-		kermit->weapons[2] = '\0';
-		for (int a = 0; a < strlen(kermit->weapons); a++) {
-			printf("The weapons: %c", kermit->weapons[a]);
+		if (*coins < 75) {
+			printf("Not enough coins");
+			break;
 		}
-		*coins -= 20;
+		temp[0] = "Healing Potion";
+		strcpy_s(kermit->flasks[0], sizeof(kermit->flasks[0]), temp[0]);
+		*coins -= 75;
 		// check if money matches the curretn weapon cost
 		// minus the cost 
-		printf("There you go, a brand new sword with the class E");
+		printf("There you go, a brand new Healing potion");
 		Sleep(2500);
 	case 1:
+		if (*coins < 150) {
+			printf("Not enough coins");
+			break;
+		}
+		*coins -= 150;
+		singlechar = 'B';
+		for (int a = 0; a < 100; a++) {
+			if (!isalnum(kermit->weapons[a])) {
+				kermit->weapons[a] = singlechar;
+				kermit->weapons[a + 1] = '\0';
+				printf("Added the sword...");
+				Sleep(2500);
+				break;
+			}
+		}
 		break;
 	case 2:
 		break;
