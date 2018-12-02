@@ -47,6 +47,7 @@ struct Kermit {
 	int posY;
 	int HP;
 	char weapons[100];
+	int durability[100];
 	char flasks[40][41];
 	char currentWeapon;
 };
@@ -116,5 +117,8 @@ void createFile(int *key, int *flashlight, MapT themap, int *width, int *height,
 void checkFight(MapT themap, char site, int *gamestate, Enemy *enemyarr);
 //void enemyMove(Enemy *enemyarr, MapT themap, int *kX, int *kY);
 void loadFile(MapT themap, int *key, int *width, int *height, int *kermitX, int *kermitY);
+int weaponList(struct Kermit *kermit);
+void currentWeaponUpdate(struct Kermit *kermit, int *damage);
+void updatedurability(struct Kermit *, int *a);
 
 #endif

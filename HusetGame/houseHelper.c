@@ -288,8 +288,9 @@ void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struc
 			if (!isalnum(kermit->weapons[a])) {
 				kermit->weapons[a] = singlechar;
 				kermit->weapons[a + 1] = '\0';
-				printf("Added the sword...");
+				printf("Added the sword with class B");
 				Sleep(2500);
+				updatedurability(&kermit, a);
 				break;
 			}
 		}
@@ -307,6 +308,7 @@ void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struc
 				kermit->weapons[a] = singlechar;
 				kermit->weapons[a + 1] = '\0';
 				printf("You got a new sword with class S!");
+				updatedurability(&kermit, a);
 				Sleep(2500);
 				break;
 			}
@@ -779,10 +781,19 @@ void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struc
 			if (answer == 1) {
 				shopScreen(themap, &*kermitX, &*kermitY, Shop, &(*kermit), &*coins);
 				if (r > 0 || r < 0) {
-					*kermitX -= r;
+					if (themap.mArr[*kermitX - r][*kermitY] == ' ') {
+						*kermitX -= r;
+					}
+					else if (themap.mArr[*kermitX + r][*kermitY] == ' ') {
+						*kermitX += r;
+					}
 				}
 				else {
-					*kermitY -= k;
+					if (themap.mArr[*kermitX][*kermitY - k] == ' ') {
+						*kermitY -= k;
+					} else if (themap.mArr[*kermitX][*kermitY + k] == ' ') {
+						*kermitY += k;
+					}
 				}
 				themap.mArr[*kermitX][*kermitY] = '@';
 			}
@@ -817,4 +828,78 @@ void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struc
 		}
 		index++;
 	}
+}
+
+void updatedurability(struct Kermit *kermit, int a) {
+	if (kermit->weapons[a] == 'S') {
+		kermit->durability[a] = 15;
+	}
+	else if (kermit->weapons[a] == 'A') {
+		kermit->durability[a] = 13;
+	}
+	else if (kermit->weapons[a] == 'B') {
+		kermit->durability[a] = 11;
+	}
+	else if (kermit->weapons[a] == 'C') {
+		kermit->durability[a] = 9;
+	}
+	else if (kermit->weapons[a] == 'D') {
+		kermit->durability[a] = 7;
+	}
+	else if (kermit->weapons[a] == 'E') {
+		kermit->durability[a] = 5;
+	}
+	else if (kermit->weapons[a] == 'F') {
+		kermit->durability[a] = 100;
+	}
+}
+
+void currentWeaponUpdate(struct Kermit *kermit, int *damage) {
+	if (kermit->currentWeapon == 'S') {
+		*damage = 35;
+	}
+	else if (kermit->currentWeapon == 'A') {
+		*damage = 30;
+	}
+	else if (kermit->currentWeapon == 'B') {
+		*damage = 25;
+	}
+	else if (kermit->currentWeapon == 'C') {
+		*damage = 20;
+	}
+	else if (kermit->currentWeapon == 'D') {
+		*damage = 15;
+	}
+	else if (kermit->currentWeapon == 'E') {
+		*damage = 10;
+	}
+	else if (kermit->currentWeapon == 'F') {
+		*damage = 5;
+	}
+}
+
+int weaponList(struct Kermit *kermit) {
+	int invSize = strlen(kermit->weapons);
+	int choice = 0;
+	if (invSize == 0 && kermit->currentWeapon != 'F') {
+		printf("\nYou hade no weapons in your inventory so your fighting with your fists only!");
+		kermit->currentWeapon = 'F';
+		Sleep(2500);
+		return;
+	}
+	else {
+		printf("Please choose from your inventory ---> \n");
+	}
+	for (int i = 0; i < invSize; i++) {
+		printf("%d: Weapon Class %c (Durability: %d)\n", i, kermit->weapons[i], kermit->durability[i]);
+	}
+	printf("Please enter the proper index for your weapon choice: ");
+	scanf_s("%d", &choice);
+	while (choice > invSize || choice < invSize - 1) {
+		printf("\nNot a valid weaponIndex, Try again.\n Value: ");
+		scanf_s("%d", &choice);
+	}
+	kermit->currentWeapon = kermit->weapons[choice];
+	printf("Your current weaponclass is %c\n", kermit->currentWeapon);
+	return choice;
 }

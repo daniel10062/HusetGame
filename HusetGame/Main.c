@@ -56,7 +56,7 @@ int main() {
 	unsigned int H = 0;
 	unsigned int moves = 0;
 	unsigned int moveF = 0;
-	int coins = 100;
+	int coins = 300;
 	int flashlight = 0;
 
 	//debug mode!
@@ -107,6 +107,7 @@ int main() {
 			char t = 'S';
 			kermit.weapons[0] = t;
 			kermit.weapons[1] = '\0';
+
 			while (theMap.mArr[kermit.posX][kermit.posY] != ' ') {
 				if (loopvalue == 4) {
 					kermit.posX++;
@@ -121,6 +122,9 @@ int main() {
 			initFunc(&gameState, theMap, &keys, &flashlight, &W, &H, &kermit.posX, &kermit.posY);
 		}
 		else if (gameState == RUNNING) {
+			for (int a = 0; a < strlen(kermit.weapons); a++) {
+				updatedurability(&kermit, a);
+			}
 			//Action set
 			if (flashlight == 0) {
 				siteRange = 'S';
@@ -198,44 +202,9 @@ int main() {
 			//Init the screen;
 			printf("Fight progressing...\n");
 			Sleep(1000);
-			//int invSize = sizeof(kermit.weapons) / sizeof(kermit.weapons[0]);
-			int invSize = strlen(kermit.weapons);
-			int choice = 0;
-			for (int i = 0; i < invSize; i++) {
-				printf("Please choose from your inventory ---> \n");
-				printf("%d: Weapon Class %c\n", i, kermit.weapons[i]);
-			}
-			printf("Please enter the proper index for your weapon choice: ");
-			scanf_s("%d", &choice);
-			while (choice > invSize || choice < invSize - 1) {
-				printf("\nNot a valid weaponIndex, Try again.\n Value: ");
-				scanf_s("%d", &choice);
-			}
-			kermit.currentWeapon = kermit.weapons[choice];
-			printf("Your current weaponclass is %c\n", kermit.currentWeapon);
+			int choice = weaponList(&kermit);
 
-			if (kermit.currentWeapon == 'S') {
-				damage = 35;
-			}
-			else if (kermit.currentWeapon == 'A') {
-				damage = 30;
-			}
-			else if (kermit.currentWeapon == 'B') {
-				damage = 25;
-			}
-			else if (kermit.currentWeapon == 'C') {
-				damage = 20;
-			}
-			else if (kermit.currentWeapon == 'D') {
-				damage = 15;
-			}
-			else if (kermit.currentWeapon == 'E') {
-				damage = 10;
-			}
-			else if (kermit.currentWeapon == 'F') {
-				damage = 5;
-			}
-			
+			currentWeaponUpdate(&kermit, &damage);
 			if (enemyArr[attackerIndex].weapon == 'S') {
 				enemyDmg = 35;
 			}
@@ -269,9 +238,20 @@ int main() {
 				int forceBack = 0;
 				int n = 0;
 				unsigned char testingChar;
+				if (kermit.durability[choice] <= 0) {
+					kermit.currentWeapon = ' ';
+					for (int a = choice; a < strlen(kermit.weapons); a++) {
+						kermit.weapons[a] = kermit.weapons[a + 1];
+					}
+					for (int a = choice; a < strlen(kermit.durability); a++) {
+						kermit.durability[a] = kermit.durability[a + 1];
+					}
+					choice = weaponList(&kermit);
+					currentWeaponUpdate(&kermit, &damage);
+				}
 				system("cls");
-				printf("Your HP: %d \t\t\t\t Enemy HP: %d\n", kermit.HP, enemyArr[attackerIndex].HP);
-				printf("Current WeaponClass: %c \t\t\t Current enemy weaponclass: %c\n\n", kermit.currentWeapon, enemyArr[attackerIndex].weapon);
+				printf("Your HP: %d \t\t\t\t\t\t\t Enemy HP: %d\n", kermit.HP, enemyArr[attackerIndex].HP);
+				printf("Current WeaponClass: %c (Durability: %d) \t\t\t Current enemy weaponclass: %c\n\n", kermit.currentWeapon,kermit.durability[choice], enemyArr[attackerIndex].weapon);
 
 				printf("Please choose move: \n");
 				int attackChoice = 0;
@@ -284,22 +264,24 @@ int main() {
 				}
 				switch (attackChoice) {
 				case 1:
+					kermit.durability[choice]--;
 					enemyArr[attackerIndex].HP -= damage;
 					printf("Nice hit! You did %d damage", damage);
-					Sleep(1500);
+					Sleep(2500);
 					break;
 				case 2:
 					//init 50% chance of hit
-					randomNum = RandomInteger(1, 3);
+					randomNum = RandomInteger(1, 2);
 					if (randomNum == 1) {
+						kermit.durability[choice] -= 2;
 						enemyArr[attackerIndex].HP -= damage * 2;
 						printf("Great hit! You did %d damage", damage * 2);
-						Sleep(1500);
+						Sleep(2500);
 						break;
 					}
 					else {
 						printf("The heavy hit missed...");
-						Sleep(1500);
+						Sleep(2500);
 						break;
 					}
 				case 3:
@@ -319,11 +301,15 @@ int main() {
 						Sleep(2500);
 						break;
 					}
-					printf("Please choose Item: ");
+					printf("Please choose Item (0: return): ");
 					scanf_s("%d", &flaskchoice);
 					while (flaskchoice < 0 || flaskchoice > numberOfItems) {
 						printf("Not a valid number, try again: ");
 						scanf_s("%d", &flaskchoice);
+					}
+					if (flaskchoice == 0) {
+						forceBack = 1;
+						break;
 					}
 					forceBack = 1;
 					switchRun = 1;
