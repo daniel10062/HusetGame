@@ -13,6 +13,10 @@
 #include "houseManager.h"
 #include "myIOLib.h"
 
+enum states { INIT = 1, RUNNING, MENU, EXIT, WIN, SAVE, FIGHT };
+
+enum states gameState;
+
 enum operation { endgame, help, take, open, show, hide };
 typedef enum operation operationT;
 typedef const char *enumOperation[];
@@ -35,6 +39,31 @@ struct userPosition {
 	int row, col;
 };
 typedef struct userPosition positionT;
+
+struct Kermit {
+	int prevX;
+	int prevY;
+	int posX;
+	int posY;
+	int HP;
+	char weapons[100];
+	char flasks[40][41];
+	char currentWeapon;
+};
+
+struct Shop {
+	char items[30][50 + 1];
+};
+
+typedef struct Enemy {
+	int HP;
+	int x;
+	int y;
+	int dead;
+	//Weapons go from S - A - B - C - D - E
+	char weapon;
+	int stance; //In attack: 1 if not 0;
+} Enemy;
 
 /********************************************************************
 Function: placeObject()
@@ -62,4 +91,30 @@ mObj (of type mapObjectT). If successful they are given the appropriate
 values, otherwhise both are set to -1.
 ********************************************************************/
 inputT getUserInput(void);
+
+void spawnEnemy(Enemy *enemyarr, MapT themap, inputT *obj, int *W, int *H);
+void addShop(MapT themap, positionT *test);
+void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struct Kermit *kermit, int *coins);
+void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struct Kermit *kermit, int *coins);
+void addCoins(MapT themap, positionT *test);
+void loadScreen(MapT themap, int *key, int *width, int *height, int *flashlight, int *kermitX, int *kermitY);
+void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY);
+void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight, int  *W, int *H, int *kermitX, int *kermitY);
+void updateMap(MapT theMap, int *firstEntry);
+void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY);
+void action(inputT inputVal, int *kermitX, int *kermitY, MapT themap);
+void updateKermitPoss(int *kermitX, int *kermitY, int *prevX, int *prevY, MapT themap);
+void sightRadius(int *kermitX, int *kermitY, MapT themap, int changer, char siteRange);
+int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, int *keys, int *gamestate, int *flashlight, int *coins);
+int checkOpenDoor(int *kermitX, int *kermitY, MapT themap);
+int checkWinDoor(int *kermitX, int *kermitY, MapT themap);
+void collateralSightCalc(MapT themap, int *height, int *width, int *kermitX, int *kermitY);
+void addFlashlight(MapT themap, int width, int height, positionT *test, int choiceX, int choiceY);
+int checkIfMoveFlashlight(int *kermitX, int *kermitY, MapT themap, int *flashlight);
+void saveScreen(int *key, int *flashlight, MapT themap, int *width, int *height, int *kermitX, int *kermitY);
+void createFile(int *key, int *flashlight, MapT themap, int *width, int *height, int *kermitX, int *kermitY);
+void checkFight(MapT themap, char site, int *gamestate, Enemy *enemyarr);
+//void enemyMove(Enemy *enemyarr, MapT themap, int *kX, int *kY);
+void loadFile(MapT themap, int *key, int *width, int *height, int *kermitX, int *kermitY);
+
 #endif
