@@ -14,6 +14,13 @@
 #include <Windows.h>
 
 #define TRUE 1
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
 
 int  placeObject(MapT tMap, int row, int col, char chObj, positionT *pos, int visibility)
 {
@@ -723,18 +730,70 @@ void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flas
 
 void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight, int  *W, int *H, int *kermitX, int *kermitY) {
 	int menuChoice = 0;
+	int hover = 0;
 	//fixing menu
 	system("cls");
 	printf("--------------------------------------------------------------\n");
 	printf("|\t\t\tWelcome to Huset!                    |\n");
 	printf("|                                                            |\n");
-	printf("|1:	New Game                                             |\n");
-	printf("|2:	Load game                                            |\n");
+	if (hover == 0) {
+		printf(ANSI_COLOR_MAGENTA "|1:	New Game                                             |" ANSI_COLOR_RESET "\n");
+	}
+	else {
+		printf("|1:	New Game                                             |\n");
+	}
+	if (hover == 1) {
+		printf(ANSI_COLOR_MAGENTA "|2:	Load game                                            |" ANSI_COLOR_RESET "\n");
+	}
+	else {
+		printf("|2:	Load game                                            |\n");
+	}
 	printf("|3:	Creator Info                                         |\n");
 	printf("|4:	How To Play                                          |\n");
 	printf("|5:	Exit                                                 |\n");
 	printf("--------------------------------------------------------------\n--> ");
-	scanf_s("%d", &menuChoice);
+
+	int ch;
+	while (ch = _getch() != 27) {
+		if (ch == 13) {
+			switch (hover) {
+			case 1:
+				*gameState = RUNNING;
+				break;
+			case 2:
+				printf("File is being loaded....\n");
+				loadScreen(theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY);
+				Sleep(2000);
+				*gameState = RUNNING;
+				break;
+			case 3:
+				creatorScreen(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY);
+				break;
+			case 4:
+				howToPlay(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY);
+				break;
+			case 5:
+				*gameState = EXIT;
+				break;
+			}
+
+		}
+		else if (ch == 0 || ch == 224)
+		{
+			switch (_getch())
+			{
+			case 80:
+				hover += 1;
+				break;
+			case 72:
+				hover -= 1;
+				break;
+			}
+		}
+	}
+
+
+	/*scanf_s("%d", &menuChoice);
 	switch (menuChoice) {
 	case 1:
 		*gameState = RUNNING;
@@ -755,7 +814,7 @@ void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight, int  *W, 
 	case 5:
 		*gameState = EXIT;
 		break;
-	}
+	}*/
 }
 
 void updateMap(MapT theMap, int *firstEntry) {
@@ -929,7 +988,7 @@ void validMoveInput(int move[], MapT themap, struct Kermit *kermit, int *gamesta
 				kermit->posX--;
 			}
 			else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
-				kermit->posX -= 2;
+				kermit->posX -= 1;
 			}
 			else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
 				*gamestate = WIN;
@@ -941,9 +1000,6 @@ void validMoveInput(int move[], MapT themap, struct Kermit *kermit, int *gamesta
 			}
 			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
 				kermit->posX--;
-			}
-			else {
-				moveInput(move, &*checkkey, &*doorCheck);
 			}
 		}
 		else if (move[1] == 1) {
@@ -951,7 +1007,7 @@ void validMoveInput(int move[], MapT themap, struct Kermit *kermit, int *gamesta
 				kermit->posX++;
 			}
 			else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
-				kermit->posX += 2;
+				kermit->posX += 1;
 			}
 			else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
 				*gamestate = WIN;
@@ -963,9 +1019,6 @@ void validMoveInput(int move[], MapT themap, struct Kermit *kermit, int *gamesta
 			}
 			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
 				kermit->posX++;
-			}
-			else {
-				moveInput(move, &*checkkey, &*doorCheck);
 			}
 		}
 		else if (move[2] == 1) {
@@ -973,7 +1026,7 @@ void validMoveInput(int move[], MapT themap, struct Kermit *kermit, int *gamesta
 				kermit->posY++;
 			}
 			else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
-				kermit->posY += 2;
+				kermit->posY += 1;
 			}
 			else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
 				*gamestate = WIN;
@@ -988,9 +1041,6 @@ void validMoveInput(int move[], MapT themap, struct Kermit *kermit, int *gamesta
 			}
 			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
 				kermit->posY++;
-			}
-			else {
-				moveInput(move, &*checkkey, &*doorCheck);
 			}
 		}
 		else if (move[3] == -1) {
@@ -998,7 +1048,7 @@ void validMoveInput(int move[], MapT themap, struct Kermit *kermit, int *gamesta
 				kermit->posY--;
 			}
 			else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
-				kermit->posY -= 2;
+				kermit->posY -= 1;
 			}
 			else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
 				*gamestate = WIN;
@@ -1010,9 +1060,6 @@ void validMoveInput(int move[], MapT themap, struct Kermit *kermit, int *gamesta
 			}
 			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
 				kermit->posY--;
-			}
-			else {
-				moveInput(move, &*checkkey, &*doorCheck);
 			}
 		}
 	}
