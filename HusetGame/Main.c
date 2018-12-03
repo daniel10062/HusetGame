@@ -39,7 +39,6 @@
 */
 
 int main() {
-
 	system("chcp 1252");
 	Randomize();
 	/*enum states gameState;*/
@@ -51,6 +50,7 @@ int main() {
 	kermit.HP = 150;
 	//Giving a start Sword for Kermit
 	int mapShown = 0;
+	int doorCheck = 0;
 	char siteRange = 'S';
 	unsigned int W = 0;
 	unsigned int H = 0;
@@ -58,6 +58,8 @@ int main() {
 	unsigned int moveF = 0;
 	int coins = 300;
 	int flashlight = 0;
+	int move[4];
+	int keyCheck = 0;
 
 	//debug mode!
 	unsigned int keys = 4;
@@ -69,7 +71,7 @@ int main() {
 	testchar[0] = "Cost: 75 coins --> Healing Flask (50 Healing)";
 	testchar[1] = "Cost: 150 coins --> Sword Class B";
 	testchar[2] = "Cost 300 coins --> Sword Class S";
-	testchar[3] = "Cost 125 coins --> Damage Flask (40 Damage)";
+	testchar[3] = "Cost 75 coins --> Damage Flask (50 Damage)";
 	for (int a = 0; a < 4; a++) {
 		strcpy_s(Shop.items[a], sizeof(Shop.items[a]), testchar[a]);
 	}
@@ -134,19 +136,31 @@ int main() {
 			}
 			updateMap(theMap, &firstEntry);
 			shopNearby(&kermit.posX, &kermit.posY, theMap, Shop, &kermit, &coins);
+
+			printf("Number of currently moves: | > %d < |\n\n", moves);
+
 			printf("Current coin value: %d\n", coins);
-			inputVal = getUserInput();
+
+			//user input using standarn input
+			/*inputVal = getUserInput();*/
+
+			//user input using arrow keys
+			moveInput(move, &keyCheck, &doorCheck);
+
 			sightRadius(&kermit.posX, &kermit.posY, theMap, 0, siteRange);
 			collateralSightCalc(theMap, &H, &W, &kermit.posX, &kermit.posY);
 			kermit.prevX = kermit.posX;
 			kermit.prevY = kermit.posY;
 
-			while (checkActionValid(inputVal, &kermit.posX, &kermit.posY, theMap, &keys, &gameState, &flashlight, &coins) < 1) {
+			
+			/*while (checkActionValid(inputVal, &kermit.posX, &kermit.posY, theMap, &keys, &gameState, &flashlight, &coins) < 1) {
 				system("cls");
 				sightRadius(&kermit.posX, &kermit.posY, theMap, 1, siteRange);
 				drawMap(theMap);
 				inputVal = getUserInput();
-			}
+			}*/
+
+
 			if (flashlight == 1) {
 				moveF++;
 				if (moveF >= 14) {
@@ -154,12 +168,10 @@ int main() {
 					flashlight = 0;
 				}
 			}
-			if (moves % 10 == 0 && moves != 0) {
-				printf("Number of currently moves: | > %d < |", moves);
-				Sleep(1500);
-			}
 			moves++;
-			action(inputVal, &kermit.posX, &kermit.posY, theMap);
+
+			validMoveInput(move, theMap, &kermit, &gameState, &flashlight, &coins,&keyCheck, &keys, &doorCheck);
+			/*action(inputVal, &kermit.posX, &kermit.posY, theMap);*/
 			updateKermitPoss(&kermit.posX, &kermit.posY, &kermit.prevX, &kermit.prevY, theMap);
 			sightRadius(&kermit.posX, &kermit.posY, theMap, 1, siteRange);
 			checkFight(theMap, siteRange, &gameState, &enemyArr);
@@ -223,8 +235,8 @@ int main() {
 			else if (enemyArr[attackerIndex].weapon == 'E') {
 				enemyDmg = 10;
 			}
-			else if (kermit.currentWeapon == 'F') {
-				damage = 5;
+			else if (enemyArr[attackerIndex].weapon == 'F') {
+				enemyDmg = 5;
 			}
 			//FightingLoop
 			while (kermit.HP > 0 || enemyArr[attackerIndex].HP > 0) {

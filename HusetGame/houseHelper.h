@@ -119,6 +119,8 @@ void checkFight(MapT themap, char site, int *gamestate, Enemy *enemyarr);
 void loadFile(MapT themap, int *key, int *width, int *height, int *kermitX, int *kermitY);
 int weaponList(struct Kermit *kermit);
 void currentWeaponUpdate(struct Kermit *kermit, int *damage);
-void updatedurability(struct Kermit *, int *a);
+void updatedurability(struct Kermit *, int a);
+void moveInput(int move);
+void validMoveInput(int move[], MapT themap, struct Kermit *kermit);
 
 #endif

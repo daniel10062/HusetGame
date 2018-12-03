@@ -11,6 +11,7 @@
 #include "houseHelper.h"
 #include <string.h>
 #include <ctype.h>
+#include <Windows.h>
 
 #define TRUE 1
 
@@ -438,7 +439,16 @@ void spawnEnemy(Enemy *enemyarr, MapT themap, inputT *obj, int *W, int *H) {
 	// init all values for enemy object
 	for (int a = 0; a < 5; a++) {
 		enemyarr[a].HP = 150;
-		enemyarr[a].weapon = 'E';
+		char arr[8];
+		arr[0] = 'S';
+		arr[1] = 'A';
+		arr[2] = 'B';
+		arr[3] = 'C';
+		arr[4] = 'D';
+		arr[5] = 'E';
+		arr[6] = 'F';
+		int randInt = RandomInteger(0, 6);
+		enemyarr[a].weapon = arr[randInt];
 		enemyarr[a].x = RandomInteger(4, *W - 5);
 		enemyarr[a].y = RandomInteger(4, *H - 5);
 		enemyarr[a].dead = 0;
@@ -796,6 +806,7 @@ void shopNearby(int *kermitX, int *kermitY, MapT themap, struct Shop Shop, struc
 					}
 				}
 				themap.mArr[*kermitX][*kermitY] = '@';
+				themap.vArr[*kermitX][*kermitY] = 1;
 			}
 			else {
 				if (r > 0 || r < 0) {
@@ -895,11 +906,218 @@ int weaponList(struct Kermit *kermit) {
 	}
 	printf("Please enter the proper index for your weapon choice: ");
 	scanf_s("%d", &choice);
-	while (choice > invSize || choice < invSize - 1) {
+	while (choice > invSize || choice < 0) {
 		printf("\nNot a valid weaponIndex, Try again.\n Value: ");
 		scanf_s("%d", &choice);
 	}
 	kermit->currentWeapon = kermit->weapons[choice];
 	printf("Your current weaponclass is %c\n", kermit->currentWeapon);
 	return choice;
+}
+
+
+void validMoveInput(int move[], MapT themap, struct Kermit *kermit, int *gamestate, int *flashlight, int *coins, int *checkkey, int *keys, int *doorCheck) {
+	if (*checkkey == 1) {
+		checkKeyMove(themap, &*kermit, &*keys, move);
+	}
+	else if (*doorCheck == 1) {
+		checkDoorMove(themap, &*kermit, &*keys);
+	} 
+	else{
+		if (move[0] == -1) {
+			if (themap.mArr[kermit->posX - 1][kermit->posY] == ' ') {
+				kermit->posX--;
+			}
+			else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+				kermit->posX -= 2;
+			}
+			else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+				*gamestate = WIN;
+				kermit->posX--;
+			}
+			else if (checkIfMoveFlashlight(&kermit->posX, &kermit->posY, themap, &*flashlight) == 1) {
+				*flashlight = 1;
+				kermit->posX--;
+			}
+			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
+				kermit->posX--;
+			}
+			else {
+				moveInput(move, &*checkkey, &*doorCheck);
+			}
+		}
+		else if (move[1] == 1) {
+			if (themap.mArr[kermit->posX + 1][kermit->posY] == ' ') {
+				kermit->posX++;
+			}
+			else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+				kermit->posX += 2;
+			}
+			else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+				*gamestate = WIN;
+				kermit->posX++;
+			}
+			else if (checkIfMoveFlashlight(&kermit->posX, &kermit->posY, themap, &*flashlight) == 1) {
+				*flashlight = 1;
+				kermit->posX++;
+			}
+			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
+				kermit->posX++;
+			}
+			else {
+				moveInput(move, &*checkkey, &*doorCheck);
+			}
+		}
+		else if (move[2] == 1) {
+			if (themap.mArr[kermit->posX][kermit->posY + 1] == ' ') {
+				kermit->posY++;
+			}
+			else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+				kermit->posY += 2;
+			}
+			else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+				*gamestate = WIN;
+				kermit->posY++;
+			}
+			else if (checkIfMoveFlashlight(&kermit->posX, &kermit->posY, themap, &*flashlight) == 1) {
+				*flashlight = 1;
+				kermit->posY++;
+			}
+			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
+				kermit->posY++;
+			}
+			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
+				kermit->posY++;
+			}
+			else {
+				moveInput(move, &*checkkey, &*doorCheck);
+			}
+		}
+		else if (move[3] == -1) {
+			if (themap.mArr[kermit->posX][kermit->posY - 1] == ' ') {
+				kermit->posY--;
+			}
+			else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+				kermit->posY -= 2;
+			}
+			else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+				*gamestate = WIN;
+				kermit->posY--;
+			}
+			else if (checkIfMoveFlashlight(&kermit->posX, &kermit->posY, themap, &*flashlight) == 1) {
+				*flashlight = 1;
+				kermit->posY--;
+			}
+			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
+				kermit->posY--;
+			}
+			else {
+				moveInput(move, &*checkkey, &*doorCheck);
+			}
+		}
+	}
+}
+
+void moveInput(int move[], int *keyCheck, int *doorcheck) {
+	*keyCheck = 0;
+	*doorcheck = 0;
+	int ch;
+	for (int a = 0; a < 4; a++) {
+		move[a] = 0;
+	}
+	ch = _getch();
+	if (ch == 107 || ch == 75) {
+		*keyCheck = 1;
+	}
+	else if (ch == 68 || ch == 100) {
+		*doorcheck = 1;
+	}
+	else if (ch == 0 || ch == 224)
+	{
+		switch (_getch())
+		{
+		case 72:
+			move[0] = -1;
+			break;
+
+		case 80:
+			move[1] = 1;
+			break;
+		case 77:
+			move[2] = 1;
+			break;
+		case 75:
+			move[3] = -1;
+			break;
+		}
+	}
+}
+
+
+int checkKeyMove(MapT themap, struct Kermit *kermit, int *keys) {
+	int r = -1;
+	int k = 0;
+	int temp = 0;
+	int index = 0;
+	for (int t = 0; t < 4; t++) {
+		if (themap.mArr[kermit->posX + r][kermit->posY + k] == 'K') {
+			kermit->posX += r;
+			kermit->posY += k;
+			*keys += 1;
+			printf("You found a key! Number of keys in inventory: %d", *keys);
+			Sleep(2500);
+			return;
+		}
+		else {
+			if (index == 1) {
+				k -= (2 * k);
+			}
+			else {
+				temp = r;
+				r = k;
+				k = temp;
+			}
+		}
+		index++;
+	}
+	printf("There is no key around your (x, y) axis to be picked up");
+	Sleep(2500);
+	return 0;
+}
+
+int checkDoorMove(MapT themap, struct Kermit *kermit, int *keys) {
+	int r = -1;
+	int k = 0;
+	int temp = 0;
+	int index = 0;
+	for (int t = 0; t < 4; t++) {
+		if (themap.mArr[kermit->posX + r][kermit->posY + k] == 'D') {
+			if (*keys < 1) {
+				printf("You were unable to open the door because you had no key");
+				Sleep(3000);
+				return;
+			}
+			else if (*keys > 0) {
+				themap.mArr[kermit->posX + r][kermit->posY + k] = 'o';
+				kermit->posX += 2 * r;
+				kermit->posY += 2 * k;
+				*keys -= 1;
+				return 1;
+			}
+		}
+		else {
+			if (index == 1) {
+				k -= (2 * k);
+			}
+			else {
+				temp = r;
+				r = k;
+				k = temp;
+			}
+		}
+		index++;
+	}
+	printf("There is no door around your (x, y) axis to be opened");
+	Sleep(3000);
+	return 0;
 }
