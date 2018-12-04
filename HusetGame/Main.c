@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 //defines
 #define TRUE 1
 #define ANSI_COLOR_RED     "\x1b[31m"
@@ -17,6 +18,7 @@
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
+
 
 // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>|
 //	 GAME IS CURRENTLY WORKING: VERSION OF GAME 1.2		|
@@ -67,7 +69,6 @@ int main() {
 	int flashlight = 0;
 	int move[4];
 	int keyCheck = 0;
-
 	//debug mode!
 	unsigned int keys = 4;
 	
@@ -142,7 +143,6 @@ int main() {
 				siteRange = 'M';
 			}
 			updateMap(theMap, &firstEntry);
-			shopNearby(&kermit.posX, &kermit.posY, theMap, Shop, &kermit, &coins);
 
 			printf("Number of currently moves: | > %d < |\n\n", moves);
 
@@ -152,7 +152,7 @@ int main() {
 			/*inputVal = getUserInput();*/
 
 			//user input using arrow keys
-			moveInput(move, &keyCheck, &doorCheck);
+			moveInput(&move, &keyCheck, &doorCheck);
 
 			sightRadius(&kermit.posX, &kermit.posY, theMap, 0, siteRange);
 			collateralSightCalc(theMap, &H, &W, &kermit.posX, &kermit.posY);
@@ -182,6 +182,7 @@ int main() {
 			updateKermitPoss(&kermit.posX, &kermit.posY, &kermit.prevX, &kermit.prevY, theMap);
 			sightRadius(&kermit.posX, &kermit.posY, theMap, 1, siteRange);
 			checkFight(theMap, siteRange, &gameState, &enemyArr);
+			shopNearby(&kermit.posX, &kermit.posY, theMap, Shop, &kermit, &coins, siteRange, &H, &W);
 		}
 		else if (gameState == MENU) {
 			system("cls");
@@ -205,6 +206,7 @@ int main() {
 			int damage = 0;
 			int enemyDmg = 0;
 			int randomNum = 0;
+			int highlight = 1;
 			printf("Watch out, an enemy is attacking you!");
 			//debugMessage
 			printf("Entering battlestance...");
@@ -221,7 +223,7 @@ int main() {
 			//Init the screen;
 			printf("Fight progressing...\n");
 			Sleep(1000);
-			int choice = weaponList(&kermit);
+			int choice = weaponList(&kermit, highlight);
 
 			currentWeaponUpdate(&kermit, &damage);
 			if (enemyArr[attackerIndex].weapon == 'S') {

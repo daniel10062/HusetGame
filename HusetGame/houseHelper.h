@@ -120,7 +120,8 @@ void loadFile(MapT themap, int *key, int *width, int *height, int *kermitX, int 
 int weaponList(struct Kermit *kermit);
 void currentWeaponUpdate(struct Kermit *kermit, int *damage);
 void updatedurability(struct Kermit *, int a);
-void moveInput(int move);
-void validMoveInput(int move[], MapT themap, struct Kermit *kermit);
+void moveInput(int *move, int *keyCheck, int *doorcheck);
+void validMoveInput(int *move, MapT themap, struct Kermit *kermit, int *gamestate, int *flashlight, int *coins, int *checkkey, int *keys, int *doorCheck);
+void showOptions(int hover);
 
 #endif
