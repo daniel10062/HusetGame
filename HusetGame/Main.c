@@ -31,21 +31,28 @@
 */
 
 /* -----> Current Working Ideas <-----
-* Implimenting an enemy.
-* Impliment a type of store where you can buy different objects; Need coins and things that give coins. Different objects to buy, example: Hint where flashlights are; Hint on where to go;
-* If enemy is implemented weapons might be good.
-* Implement difficulty levels.
+* Implimenting an enemy. #fixed
+* Impliment a type of store where you can buy different objects; Need coins and things that give coins. Different objects to buy, example: Hint where flashlights are; Hint on where to go; #fixed
+* If enemy is implemented weapons might be good. #fixed
+* Implement difficulty levels. #notfixed
+* set fixed loactions for store. Also make so that the enemies dont spawn next to each other or doors
 */
 
 /* -----> Enemy | Battlestage <-----
 * A gamestate in which the person fights a enemy on the screen;
 * Screen---
-* Should show available weapons, flasks etc... 
+* Should show available weapons, flasks etc...
 * Show HP, Attacks and how to do.
 * Enemy---
 * If the enemy is in sight for Kermit, enter battlestage;
-* 
+*
 */
+
+/* -----> If time || Small tweaks <-----
+* If moveinput doesnt go through minmize moves by 1;
+*/
+
+
 
 int main() {
 	system("chcp 1252");
@@ -64,6 +71,7 @@ int main() {
 	unsigned int W = 0;
 	unsigned int H = 0;
 	unsigned int moves = 0;
+	int testTry = 1;
 	unsigned int moveF = 0;
 	int coins = 300;
 	int flashlight = 0;
@@ -104,7 +112,9 @@ int main() {
 	spawnEnemy(&enemyArr, theMap, &test, &W, &H);
 
 	addFlashlight(theMap, &W, &H, &test, 0, 0);
-	addShop(theMap,&test);
+	for (int a = 0; a < 6; a++) {
+		addShop(theMap, &test, W, H);
+	}
 	addCoins(theMap, &test);
 	inputT inputVal;
 
@@ -132,8 +142,11 @@ int main() {
 			initFunc(&gameState, theMap, &keys, &flashlight, &W, &H, &kermit.posX, &kermit.posY);
 		}
 		else if (gameState == RUNNING) {
-			for (int a = 0; a < strlen(kermit.weapons); a++) {
-				updatedurability(&kermit, a);
+			if (testTry == 1) {
+				for (int a = 0; a < strlen(kermit.weapons); a++) {
+					updatedurability(&kermit, a);
+				}
+				testTry = 2;
 			}
 			//Action set
 			if (flashlight == 0) {

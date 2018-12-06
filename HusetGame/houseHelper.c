@@ -92,7 +92,7 @@ inputT getUserInput(void)
 void addCoins(MapT themap, positionT *test) {
 	char inputval = 'C';
 	for (int i = 0; i < 13; i++) {
-		int succes = placeObject(themap, 0, 0, inputval, &*test, 1);
+		int succes = placeObject(themap, 0, 0, inputval, &*test, 0);
 	}
 }
 
@@ -296,7 +296,7 @@ void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struc
 				kermit->weapons[a + 1] = '\0';
 				printf("\n\nTransaction Complete!");
 				Sleep(2500);
-				updatedurability(&kermit, a);
+				updatedurability(&*kermit, a);
 				break;
 			}
 		}
@@ -731,38 +731,36 @@ void drawOptions(int *hover) {
 		*hover = 1;
 	}
 	system("cls");
-	printf("--------------------------------------------------------------\n");
-	printf("|\t\t\tWelcome to Huset!                    |\n");
-	printf("|                                                            |\n");
+	printf("\n\n\t\t\t\t\t\t  Welcome  to  Huset\n\n");
 	if (*hover == 1) {
-		printf("|1:" ANSI_COLOR_MAGENTA "	New Game                                             " ANSI_COLOR_RESET "|\n");
+		printf(ANSI_COLOR_MAGENTA "\t\t\t\t\t\t       New  Game" ANSI_COLOR_RESET "\n\n");
 	}
 	else {
-		printf("|1:	New Game                                             |\n");
+		printf("\t\t\t\t\t\t       New  Game\n\n");
 	}
 	if (*hover == 2) {
-		printf("|2:" ANSI_COLOR_MAGENTA	"	Load game                                            " ANSI_COLOR_RESET "|\n");
+		printf(ANSI_COLOR_MAGENTA	"\t\t\t\t\t              Load   Game" ANSI_COLOR_RESET "\n\n");
 	}
 	else {
-		printf("|2:	Load game                                            |\n");
+		printf("\t\t\t\t\t              Load   Game\n\n");
 	}
 	if (*hover == 3) {
-		printf("|3:" ANSI_COLOR_MAGENTA	"	Creator Info                                         " ANSI_COLOR_RESET "|\n");
+		printf(ANSI_COLOR_MAGENTA"\t\t\t\t\t             Creator  Info" ANSI_COLOR_RESET "\n\n");
 	}
 	else {
-		printf("|3:	Creator Info                                         |\n");
+		printf("\t\t\t\t\t             Creator  Info\n\n");
 	}
 	if (*hover == 4) {
-		printf("|4:" ANSI_COLOR_MAGENTA	"	How to Play                                          " ANSI_COLOR_RESET "|\n");
+		printf(ANSI_COLOR_MAGENTA"\t\t\t\t\t             How  To  Play" ANSI_COLOR_RESET "\n\n");
 	}
 	else {
-		printf("|4:	How To Play                                          |\n");
+		printf("\t\t\t\t\t             How  To  Play\n\n");
 	}
 	if (*hover == 5) {
-		printf("|5:" ANSI_COLOR_MAGENTA	"	Exit						     " ANSI_COLOR_RESET "|\n");
+		printf(ANSI_COLOR_MAGENTA"\t\t\t\t\t                 Exit" ANSI_COLOR_RESET "\n\n");
 	}
 	else {
-		printf("|5:	Exit                                                 |\n");
+		printf("\t\t\t\t\t                 Exit\n\n");
 	}
 }
 
@@ -827,10 +825,25 @@ void updateMap(MapT theMap, int *firstEntry) {
 	}
 }
 
-void addShop(MapT themap, positionT *test) {
+void addShop(MapT themap, positionT *test, int width, int height) {
 	char inputval = 'B';
-	for (int a = 0; a < 3; a++) {
-		int succes = placeObject(themap, 0, 0, inputval, &*test, 1);
+	int posX, posY;
+	int offset = 4;
+	int loopStart = 0;
+	int side[4];
+	side[0] = offset;
+	side[1] = width - offset;
+	side[2] = offset;
+	side[3] = height - offset;
+	posX = RandomInteger(side[0], side[1]);
+	posY = RandomInteger(side[2], side[3]);
+	PLACECHECK:if (themap.mArr[posX][posY] == ' ') {
+		int succes = placeObject(themap, posX, posY, inputval, &*test, 1);
+	}
+	else {
+		posX = RandomInteger(side[0], side[1]);
+		posY = RandomInteger(side[2], side[3]);
+		goto PLACECHECK;
 	}
 }
 
@@ -965,7 +978,7 @@ void currentWeaponUpdate(struct Kermit *kermit, int *damage) {
 
 int weaponList(struct Kermit *kermit, int highlight) {
 	int invSize = strlen(kermit->weapons);
-	int choice = 0;
+	/*int choice = 0;*/
 	int ch;
 	if (invSize == 0 && kermit->currentWeapon != 'F') {
 		printf("\nYou hade no weapons in your inventory so your fighting with your fists only!");
@@ -976,7 +989,13 @@ int weaponList(struct Kermit *kermit, int highlight) {
 	else {
 		printf("Please choose from your inventory ---> \n");
 	}
-	SCREENOPT:system("cls");
+SCREENOPT:system("cls");
+	if (highlight < 1) {
+		highlight = invSize;
+	}
+	else if (highlight > invSize) {
+		highlight = 1;
+	}
 	for (int i = 1; i < invSize + 1; i++) {
 		if (i == highlight) {
 			printf("%d:"ANSI_COLOR_RED " Weapon Class %c" ANSI_COLOR_RESET " (Durability: %d)\n", i, kermit->weapons[i - 1], kermit->durability[i - 1]);
@@ -1009,7 +1028,7 @@ int weaponList(struct Kermit *kermit, int highlight) {
 	} while (ch == 13);
 	CHOICE:kermit->currentWeapon = kermit->weapons[highlight - 1];
 	printf("Your current weaponclass is %c\n", kermit->currentWeapon);
-	return choice;
+	return (highlight - 1);
 }
 
 
@@ -1019,88 +1038,88 @@ void validMoveInput(int *move, MapT themap, struct Kermit *kermit, int *gamestat
 	}
 	else if (*doorCheck == 1) {
 		checkDoorMove(themap, &*kermit, &*keys);
-	} 
-	else{
-		if (move[0] == 1) {
-			if (themap.mArr[kermit->posX - 1][kermit->posY] == ' ') {
-				kermit->posX--;
-			}
-			else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
-				kermit->posX -= 1;
-			}
-			else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
-				*gamestate = WIN;
-				kermit->posX--;
-			}
-			else if (checkIfMoveFlashlight(&kermit->posX, &kermit->posY, themap, &*flashlight) == 1) {
-				*flashlight = 1;
-				kermit->posX--;
-			}
-			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
-				kermit->posX--;
-			}
+	}
+	else if (move[0] == 1){
+		if (themap.mArr[kermit->posX - 1][kermit->posY] == ' ') {
+			kermit->posX -= 1;
 		}
-		else if (move[1] == 1) {
-			if (themap.mArr[kermit->posX + 1][kermit->posY] == ' ') {
-				kermit->posX++;
-			}
-			else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
-				kermit->posX += 1;
-			}
-			else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
-				*gamestate = WIN;
-				kermit->posX++;
-			}
-			else if (checkIfMoveFlashlight(&kermit->posX, &kermit->posY, themap, &*flashlight) == 1) {
-				*flashlight = 1;
-				kermit->posX++;
-			}
-			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
-				kermit->posX++;
-			}
+		else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+			kermit->posX -= 1;
 		}
-		else if (move[2] == 1) {
-			if (themap.mArr[kermit->posX][kermit->posY + 1] == ' ') {
-				kermit->posY++;
-			}
-			else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
-				kermit->posY += 1;
-			}
-			else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
-				*gamestate = WIN;
-				kermit->posY++;
-			}
-			else if (checkIfMoveFlashlight(&kermit->posX, &kermit->posY, themap, &*flashlight) == 1) {
-				*flashlight = 1;
-				kermit->posY++;
-			}
-			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
-				kermit->posY++;
-			}
-			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
-				kermit->posY++;
-			}
+		else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+			*gamestate = WIN;
+			kermit->posX -= 1;
 		}
-		else if (move[3] == 1) {
-			if (themap.mArr[kermit->posX][kermit->posY - 1] == ' ') {
-				kermit->posY--;
-			}
-			else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
-				kermit->posY -= 1;
-			}
-			else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
-				*gamestate = WIN;
-				kermit->posY--;
-			}
-			else if (checkIfMoveFlashlight(&kermit->posX, &kermit->posY, themap, &*flashlight) == 1) {
-				*flashlight = 1;
-				kermit->posY--;
-			}
-			else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
-				kermit->posY--;
-			}
+		else if (checkIfMoveFlashlight(&kermit->posX, &kermit->posY, themap, &*flashlight) == 1) {
+			*flashlight = 1;
+			kermit->posX -= 1;
+		}
+		else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
+			kermit->posX -= 1;
 		}
 	}
+	else if (move[1] == 1) {
+		if (themap.mArr[kermit->posX + 1][kermit->posY] == ' ') {
+			kermit->posX++;
+		}
+		else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+			kermit->posX += 1;
+		}
+		else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+			*gamestate = WIN;
+			kermit->posX++;
+		}
+		else if (checkIfMoveFlashlight(&kermit->posX, &kermit->posY, themap, &*flashlight) == 1) {
+			*flashlight = 1;
+			kermit->posX++;
+		}
+		else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
+			kermit->posX++;
+		}
+	}
+	else if (move[2] == 1) {
+		if (themap.mArr[kermit->posX][kermit->posY + 1] == ' ') {
+			kermit->posY++;
+		}
+		else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+			kermit->posY += 1;
+		}
+		else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+			*gamestate = WIN;
+			kermit->posY++;
+		}
+		else if (checkIfMoveFlashlight(&kermit->posX, &kermit->posY, themap, &*flashlight) == 1) {
+			*flashlight = 1;
+			kermit->posY++;
+		}
+		else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
+			kermit->posY++;
+		}
+		else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
+			kermit->posY++;
+		}
+	}
+	else if (move[3] == 1) {
+		if (themap.mArr[kermit->posX][kermit->posY - 1] == ' ') {
+			kermit->posY--;
+		}
+		else if (checkOpenDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+			kermit->posY -= 1;
+		}
+		else if (checkWinDoor(&kermit->posX, &kermit->posY, themap) == 1) {
+			*gamestate = WIN;
+			kermit->posY--;
+		}
+		else if (checkIfMoveFlashlight(&kermit->posX, &kermit->posY, themap, &*flashlight) == 1) {
+			*flashlight = 1;
+			kermit->posY--;
+		}
+		else if (checkIfMoveCoins(&kermit->posX, &kermit->posY, themap, &*coins) == 1) {
+			kermit->posY--;
+		}
+	}
+	*checkkey = 0;
+	*doorCheck = 0;
 }
 
 void moveInput(int *move, int *keyCheck, int *doorcheck) {
