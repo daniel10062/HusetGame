@@ -12,6 +12,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <Windows.h>
+#include <stdbool.h>
 
 #define TRUE 1
 #define ANSI_COLOR_RED     "\x1b[31m"
@@ -247,24 +248,50 @@ int checkActionValid(inputT inputVal, int *kermitX, int *kermitY, MapT themap, i
 void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struct Kermit *kermit, int *coins) {
 	//make a structure to store all the item for the shop to sell then loop throught i in here
 	printf("Entering the shop screen....");
-	printf("\t\t\t\t\t\t Your coins: %d\n", *coins);
-	int index = 0;
 	char *temp[100];
+	int hover = 0;
 	char singlechar;
 	unsigned char valuetesting;
+	showITEMS:system("cls");
+	int index = 0;
+	if (hover > 3) {
+		hover = 0;
+	}
+	else if (hover < 0) {
+		hover = 0;
+	}
+	printf("\t\t\t\t\t\t Your coins: %d\n", *coins);
 	for (int a = 0; a < 4; a++) {
-		printf("%d: %s\n", index + 1, Shop.items[a]);
+		if (hover == a) {
+			printf("%d: " ANSI_COLOR_YELLOW "%s\n" ANSI_COLOR_RESET, index + 1, Shop.items[a]);
+		}
+		else {
+			printf("%d: %s\n", index + 1, Shop.items[a]);
+		}
 		index++;
 	}
-	int choice = 0;
-	printf("Please specify the type you want to buy with the right index!\nAnswer: ");
-	scanf_s("%d", &choice);
-	while (choice < 0 || choice > 4) {
-		printf("Not a valid index... Try again. --> ");
-		scanf_s("%d", &choice);
-	}
-	switch (choice) {
-	case 1:
+	int ch;
+	do {
+		ch = _getch();
+		if (ch == 0 || ch == 224)
+		{
+			switch (_getch())
+			{
+			case 72:
+				hover -= 1;
+				goto showITEMS;
+				break;
+
+			case 80:
+				hover += 1;
+				goto showITEMS;
+				break;
+			}
+		}
+	} while (ch != 13);
+
+	switch (hover) {
+	case 0:
 		if (*coins < 75) {
 			printf("Not enough coins, leaving...");
 			Sleep(2500);
@@ -282,7 +309,7 @@ void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struc
 		printf("\n\nTransaction Complete!");
 		Sleep(2500);
 		break;
-	case 2:
+	case 1:
 		if (*coins < 150) {
 			printf("Not enough coins, leaving...");
 			Sleep(2500);
@@ -301,7 +328,7 @@ void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struc
 			}
 		}
 		break;
-	case 3:
+	case 2:
 		if (*coins < 300) {
 			printf("Not enough coins, leaving...");
 			Sleep(2500);
@@ -320,7 +347,7 @@ void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struc
 			}
 		}
 		break;
-	case 4:
+	case 3:
 		if (*coins < 90) {
 			printf("Not enough coins, leaving...");
 			Sleep(2500);
@@ -340,7 +367,7 @@ void shopScreen(MapT themap, int *kermitX, int *kermitY, struct Shop Shop, struc
 		printf("\n\nTransaction Complete!");
 		Sleep(2500);
 		break;
-	case 5:
+	case 4:
 		break;
 	}
 }
@@ -370,6 +397,9 @@ void saveScreen(int *key, int *flashlight, MapT themap, int *width, int *height,
 }
 
 void createFile(int *key, int *flashlight, MapT themap, int *width, int *height, int *kermitX, int *kermitY) {
+	//moves
+	//number of enemies left
+	//number of flashlights left
 	char* filename = "MapInfoSAVED.txt";
 	char* keyinfoName = "KeyInfoSAVED.txt";
 	FILE *mapInfo;
@@ -381,6 +411,7 @@ void createFile(int *key, int *flashlight, MapT themap, int *width, int *height,
 			fprintf(mapInfo, "%c", themap.mArr[a][b]);
 			/*fputc(themap.mArr[a][b], mapInfo);*/
 			if (themap.mArr[a][b] == '@') {
+				system("cls");
 				printf("We found kermit!! pos: %d, %d", a, b);
 				Sleep(1500);
 
@@ -440,11 +471,11 @@ void loadFile(MapT themap, int *key, int *width, int *height, int *kermitX, int 
 	fclose(mapFile);
 }
 
-void spawnEnemy(Enemy *enemyarr, MapT themap, inputT *obj, int *W, int *H) {
+void spawnEnemy(Enemy *enemyarr, MapT themap, inputT *obj, int *W, int *H, int pos) {
 	// init all values for enemy object
-	for (int a = 0; a < 5; a++) {
-		enemyarr[a].HP = 150;
+		enemyarr[pos].HP = 150;
 		char arr[8];
+		int offset = 3;
 		arr[0] = 'S';
 		arr[1] = 'A';
 		arr[2] = 'B';
@@ -453,23 +484,16 @@ void spawnEnemy(Enemy *enemyarr, MapT themap, inputT *obj, int *W, int *H) {
 		arr[5] = 'E';
 		arr[6] = 'F';
 		int randInt = RandomInteger(0, 6);
-		enemyarr[a].weapon = arr[randInt];
-		enemyarr[a].x = RandomInteger(4, *W - 5);
-		enemyarr[a].y = RandomInteger(4, *H - 5);
-		enemyarr[a].dead = 0;
-		int loopvalue = 0;
-		while (themap.mArr[enemyarr[a].x][enemyarr[a].y] != ' ') {
-			if (loopvalue == 4) {
-				enemyarr[a].x++;
-			}
-			else {
-				enemyarr[a].y++;
-			}
-			loopvalue++;
+		enemyarr[pos].weapon = arr[randInt];
+		enemyarr[pos].x = RandomInteger(4, *W - offset);
+		enemyarr[pos].y = RandomInteger(4, *H - offset);
+		enemyarr[pos].dead = 0;
+		while (themap.mArr[enemyarr[pos].x][enemyarr[pos].y] != ' ') {
+			enemyarr[pos].x = RandomInteger(4, *W - offset);
+			enemyarr[pos].y = RandomInteger(4, *H - offset);
 		}
-		enemyarr[a].stance = 0;
-		int succes = placeObject(themap, enemyarr[a].x, enemyarr[a].y, '§', &*obj, 1);
-	}
+		enemyarr[pos].stance = 0;
+		int succes = placeObject(themap, enemyarr[pos].x, enemyarr[pos].y, '§', &*obj, 1);
 }
 
 int checkOpenDoor(int *kermitX, int *kermitY, MapT themap) {
@@ -596,6 +620,13 @@ void sightRadius(int *kermitX, int *kermitY, MapT themap, int changer, char site
 		k1 = -1;
 		E1 = 2;
 		E2 = 2;
+		for (int r = r1 - 1; r < E1 + 1; r++) {
+			for (int k = k1 - 1; k < E2 + 1; k++) {
+				if (themap.mArr[*kermitX + r][*kermitY + k] == 'B') {
+					themap.vArr[*kermitX + r][*kermitY + k] = 1;
+				}
+			}
+		}
 	}
 	else if (site == 'M') {
 		r1 = -2;
@@ -657,12 +688,6 @@ void collateralSightCalc(MapT themap, int *height, int *width, int *kermitX, int
 				themap.vArr[h][w] = 1;
 			}
 			else if (themap.mArr[h][w] == 'M') {
-				themap.vArr[h][w] = 1;
-			}
-			else if (themap.mArr[h][w] == '§') {
-				themap.vArr[h][w] = 1;
-			}
-			else if (themap.mArr[h][w] == 'B') {
 				themap.vArr[h][w] = 1;
 			}
 			else if (themap.vArr[h][w] == 1) {
@@ -826,24 +851,71 @@ void updateMap(MapT theMap, int *firstEntry) {
 }
 
 void addShop(MapT themap, positionT *test, int width, int height) {
+	int wArr[254];
+	int hArr[254];
+	int index = 0;
+	for (int n = 0; n < width; n++) {
+		if (n % 4 == 0) {
+			wArr[index] = n;
+			index++;
+		}
+	}
+	index = 0;
+	for (int n = 0; n < height; n++) {
+		if (n % 4 == 0) {
+			hArr[index] = n;
+			index++;
+		}
+	}
 	char inputval = 'B';
 	int posX, posY;
-	int offset = 4;
+	int offset = 2;
 	int loopStart = 0;
 	int side[4];
 	side[0] = offset;
 	side[1] = width - offset;
 	side[2] = offset;
 	side[3] = height - offset;
-	posX = RandomInteger(side[0], side[1]);
+	INITVALUES:posX = RandomInteger(side[0], side[1]);
 	posY = RandomInteger(side[2], side[3]);
-	PLACECHECK:if (themap.mArr[posX][posY] == ' ') {
-		int succes = placeObject(themap, posX, posY, inputval, &*test, 1);
+	while (!isInArr(posX, wArr, sizeof(wArr) / sizeof(wArr[0]))) {
+		posX = RandomInteger(side[0], side[1]);
+	}
+	for (int x = 0; x < sizeof(wArr) / sizeof(wArr[0]); x++) {
+		if (wArr[x] == posX) {
+			remove_element(wArr, x, sizeof(wArr) / sizeof(wArr[0]));
+		}
+	}
+	while (!isInArr(posY, hArr, sizeof(hArr) / sizeof(hArr[0]))) {
+		posY = RandomInteger(side[2], side[3]);
+	}
+	for (int y = 0; y < sizeof(hArr) / sizeof(hArr[0]); y++) {
+		if (hArr[y] == posY) {
+			remove_element(hArr, y, sizeof(hArr) / sizeof(hArr[0]));
+		}
+	}
+	if (themap.mArr[posX][posY] == ' ') {
+		int succes = placeObject(themap, posX, posY, inputval, &*test, 0);
 	}
 	else {
-		posX = RandomInteger(side[0], side[1]);
-		posY = RandomInteger(side[2], side[3]);
-		goto PLACECHECK;
+		goto INITVALUES;
+	}
+}
+
+int isInArr(int val, int *arr, int length) {
+	int i;
+	for (i = 0; i < length; i++) {
+		if (arr[i] == val)
+			return true;
+	}
+	return false;
+}
+
+void remove_element(int *arr, int index, int array_length)
+{
+	int i;
+	for (i = index; i < array_length - 1; i++) {
+		arr[i] = arr[i + 1];
 	}
 }
 
@@ -1122,7 +1194,7 @@ void validMoveInput(int *move, MapT themap, struct Kermit *kermit, int *gamestat
 	*doorCheck = 0;
 }
 
-void moveInput(int *move, int *keyCheck, int *doorcheck) {
+void moveInput(int *move, int *keyCheck, int *doorcheck, int *gamestate) {
 	*keyCheck = 0;
 	*doorcheck = 0;
 	int ch;
@@ -1135,6 +1207,9 @@ void moveInput(int *move, int *keyCheck, int *doorcheck) {
 	}
 	else if (ch == 68 || ch == 100) {
 		*doorcheck = 1;
+	}
+	else if (ch == 27) {
+		*gamestate = MENU;
 	}
 	else if (ch == 0 || ch == 224)
 	{

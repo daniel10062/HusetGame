@@ -77,6 +77,7 @@ int main() {
 	int flashlight = 0;
 	int move[4];
 	int keyCheck = 0;
+	unsigned int numEnemies = 7;
 	//debug mode!
 	unsigned int keys = 4;
 	
@@ -107,9 +108,19 @@ int main() {
 	if (H < 25) {
 		H = 25;
 	}
+
+	//Getting the console terminal´s screen width and height
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	int width, height;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+	width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+	height = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+
 	positionT test;
 	MapT theMap = createMap(W, H, 20);
-	spawnEnemy(&enemyArr, theMap, &test, &W, &H);
+	for (int num = 1; num <= numEnemies; num++) {
+		spawnEnemy(&enemyArr, theMap, &test, &W, &H, num - 1);
+	}
 
 	addFlashlight(theMap, &W, &H, &test, 0, 0);
 	for (int a = 0; a < 6; a++) {
@@ -119,6 +130,7 @@ int main() {
 	inputT inputVal;
 
 	while (TRUE) {
+
 		if (gameState == INIT) {
 			int loopvalue = 0;
 			kermit.posX = W / 2 - 1;
@@ -165,7 +177,7 @@ int main() {
 			/*inputVal = getUserInput();*/
 
 			//user input using arrow keys
-			moveInput(&move, &keyCheck, &doorCheck);
+			moveInput(&move, &keyCheck, &doorCheck, &gameState);
 
 			sightRadius(&kermit.posX, &kermit.posY, theMap, 0, siteRange);
 			collateralSightCalc(theMap, &H, &W, &kermit.posX, &kermit.posY);
@@ -198,7 +210,59 @@ int main() {
 			shopNearby(&kermit.posX, &kermit.posY, theMap, Shop, &kermit, &coins, siteRange, &H, &W);
 		}
 		else if (gameState == MENU) {
-			system("cls");
+			int hover = 1;
+			int ch;
+		START:system("cls");
+			if (hover > 2) {
+				hover = 1;
+			}
+			else if (hover < 1) {
+				hover = 2;
+			}
+			for (int a = 0; a < height + 4; a++) {
+				printf(" ");
+			}
+			if (hover == 1) {
+				printf(ANSI_COLOR_CYAN "Resume" ANSI_COLOR_RESET "\n");
+			}
+			else {
+				printf("Resume\n");
+			}
+			for (int a = 0; a < height + 4; a++) {
+				printf(" ");
+			}
+			if (hover == 2) {
+				printf(ANSI_COLOR_CYAN "Exit\n" ANSI_COLOR_RESET);
+			}
+			else {
+				printf("Exit\n");
+			}
+			ch = _getch();
+			do {
+				if (ch == 13) {
+					if (hover == 1) {
+						gameState = RUNNING;
+					}
+					else if (hover == 2) {
+						gameState = SAVE;
+					}
+				}
+				else if (ch == 0 || ch == 224)
+				{
+					switch (_getch())
+					{
+					case 72:
+						hover += 1;
+						goto START;
+						break;
+
+					case 80:
+						hover -= 1;
+						goto START;
+						break;
+					}
+				}
+			} while (ch != 13);
 		}
 		else if (gameState == EXIT) {
 			break;
@@ -221,21 +285,16 @@ int main() {
 			int randomNum = 0;
 			int highlight = 1;
 			printf("Watch out, an enemy is attacking you!");
-			//debugMessage
-			printf("Entering battlestance...");
 			Sleep(2000);
 			system("cls");
 			int attackerIndex = 0;
 			for (int a = 0; a < 5; a++) {
 				if (enemyArr[a].stance == 1 && enemyArr[a].dead != 1) {
 					attackerIndex = a;
-					printf("The attacker is: %d\n", a);
 					Sleep(1500);
 				}
 			}
-			//Init the screen;
-			printf("Fight progressing...\n");
-			Sleep(1000);
+			//Init the screen	
 			int choice = weaponList(&kermit, highlight);
 
 			currentWeaponUpdate(&kermit, &damage);
@@ -367,44 +426,6 @@ int main() {
 						printf("Great job, you did 50 Damage on the enemy!\n");
 						Sleep(2500);
 					}
-					/*switch (flaskchoice) {
-					case 1: 
-						forceBack = 1;
-						switchRun = 1;
-						for (int a = 0; a < strlen(kermit.flasks[flaskchoice - 1]); a++) {
-							if (kermit.flasks[flaskchoice - 1][a] == ' ') {
-								lookWord[a] = '\0';
-								break;
-							}
-							lookWord[a] = kermit.flasks[flaskchoice - 1][a];
-						}
-						if (strcmp("Healing", lookWord) == 0) {
-							assign[0] = ' ';
-							strcpy_s(kermit.flasks[flaskchoice - 1], sizeof(kermit.flasks[flaskchoice - 1]), assign);
-							kermit.HP += 50;
-							printf("Great job, you healed for 50 HP!\n");
-							Sleep(2500);
-						}
-						break;
-					case 2:
-						forceBack = 1;
-						switchRun = 1;
-						for (int a = 0; a < strlen(kermit.flasks[sizeof(kermit.flasks) / sizeof(kermit.flasks[0]) - 1]); a++) {
-							if (kermit.flasks[flaskchoice - 1][a] == ' ') {
-								lookWord[a] = '\0';
-								break;
-							}
-							lookWord[a] = kermit.flasks[flaskchoice - 1][a];
-						}
-						if (strcmp("Damage", lookWord) == 0) {
-							assign[0] = ' ';
-							strcpy_s(kermit.flasks[flaskchoice - 1], sizeof(kermit.flasks[flaskchoice - 1]), assign);
-							enemyArr[attackerIndex].HP -= 50;
-							printf("Great job, you damaged the enemy for 50 damage!\n");
-							Sleep(2500);
-						}
-						break;
-					}*/
 					break;
 				}
 				if ((numberOfItems == 0 && switchRun == 1) || forceBack == 1) {
@@ -415,22 +436,22 @@ int main() {
 				int randnum = 0;
 				enemyattackChoice = RandomInteger(2, 3);
 				if (enemyattackChoice == 2) {
-					printf("\nEnemy is attacking with quick attack...");
+					printf("\n\n\nEnemy is attacking with quick attack...\n");
 					kermit.HP -= enemyDmg;
-					printf("\nYou lost %d heath. Current heath: %d", enemyDmg, kermit.HP);
-					Sleep(1500);
+					printf("You lost %d heath. Current heath: %d", enemyDmg, kermit.HP);
+					Sleep(2500);
 				}
 				else {
-					printf("\nEnemy is attacking with heavy attack...");
+					printf("\n\n\nEnemy is attacking with heavy attack...\n");
 					randnum = RandomInteger(1, 2);
 					if (randnum == 1) {
 						kermit.HP -= 2*enemyDmg;
-						printf("\nYou lost %d heath. Current heath: %d", enemyDmg, kermit.HP);
-						Sleep(1500);
+						printf("You lost %d heath. Current heath: %d", enemyDmg, kermit.HP);
+						Sleep(2500);
 					}
 					else {
-						printf("\nThe enemy missed you! How lucky!?");
-						Sleep(1500);
+						printf("\n\n\nThe enemy missed you! How lucky!?");
+						Sleep(2500);
 					}
 				}
 			}

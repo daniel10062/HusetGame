@@ -123,5 +123,7 @@ void updatedurability(struct Kermit *, int a);
 void moveInput(int *move, int *keyCheck, int *doorcheck);
 void validMoveInput(int *move, MapT themap, struct Kermit *kermit, int *gamestate, int *flashlight, int *coins, int *checkkey, int *keys, int *doorCheck);
 void showOptions(int hover);
+int isInArr(int val, int *arr, int size);
+void remove_element(int *array, int index, int array_length);
 
 #endif
