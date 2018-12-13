@@ -387,25 +387,25 @@ void addFlashlight(MapT themap, int width, int height, positionT *test, int choi
 	}
 }
 
-void loadScreen(MapT themap, int *key, int *width, int *height, int *flashlight, int *kermitX, int *kermitY) {
+void loadScreen(MapT themap, int *key, int *width, int *height, int *flashlight, int *kermitX, int *kermitY, int *moves, int *numEnemies) {
 	//Add the functions about files	
-	loadFile(themap, &*key, &*width, &*height, &*flashlight, &*kermitX, &*kermitY);
+	loadFile(themap, &*key, &*width, &*height, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemies);
 }
 
-void saveScreen(int *key, int *flashlight, MapT themap, int *width, int *height, int *kermitX, int *kermitY) {
-	createFile(&*key, &*flashlight, themap, &*width, &*height, &*kermitX, &*kermitY);
+void saveScreen(int *key, int *flashlight, MapT themap, int *width, int *height, int *kermitX, int *kermitY, int *moves, int *numEnemies) {
+	createFile(&*key, &*flashlight, themap, &*width, &*height, &*kermitX, &*kermitY, &*moves, &*numEnemies);
 }
 
-void createFile(int *key, int *flashlight, MapT themap, int *width, int *height, int *kermitX, int *kermitY) {
+void createFile(int *key, int *flashlight, MapT themap, int *width, int *height, int *kermitX, int *kermitY, int *moves, int *numEnemies) {
 	//moves
 	//number of enemies left
-	//number of flashlights left
 	char* filename = "MapInfoSAVED.txt";
-	char* keyinfoName = "KeyInfoSAVED.txt";
+	char* singleInfoFile = "singleInfo.txt";
 	FILE *mapInfo;
-	FILE *keyInfo;
+	FILE *singleInfo;
 	fopen_s(&mapInfo, filename, "w+");
-	fopen_s(&keyInfo, keyinfoName, "w+");
+	fopen_s(&singleInfo, singleInfoFile, "w+");
+	//Storing the current data from the map
 	for (int a = 0; a < *width; a++) {
 		for (int b = 0; b < *height; b++) {
 			fprintf(mapInfo, "%c", themap.mArr[a][b]);
@@ -419,30 +419,41 @@ void createFile(int *key, int *flashlight, MapT themap, int *width, int *height,
 			fprintf_s(mapInfo, "\n");
 		}
 	}
-	fprintf(keyInfo, "%d\n", *key);
+	//printing current number of keys
+	fprintf(singleInfo, "%d\n", *key);
+	fprintf(singleInfo, "%d\n", *moves);
+	fprintf(singleInfo, "%d\n", *numEnemies);
+
 	fclose(mapInfo);
-	fclose(keyInfo);
+	fclose(singleInfo);
 }
 
-void loadFile(MapT themap, int *key, int *width, int *height, int *kermitX, int *kermitY) {
+void loadFile(MapT themap, int *key, int *width, int *height, int *kermitX, int *kermitY, int *moves, int *numEnemies) {
 	FILE* mapFile;
-	FILE* keyFile;
+	FILE* singleInfo;
 	/*themap = createMap(*width, *height, 20);*/
 	char* temp;
 	unsigned char t;
 	temp = malloc(12 * sizeof(char));
 	fopen_s(&mapFile, "MapInfoSAVED.txt", "r");
-	fopen_s(&keyFile, "KeyInfoSAVED.txt", "r");
+	fopen_s(&singleInfo, "singleInfo.txt", "r");
 	if (mapFile == NULL) {
 		printf("Unable to open the file...");
 		return;
 	}
-	if (keyFile == NULL) {
+	if (singleInfo == NULL) {
 		printf("Unable to open the file...");
 		return;
 	}
-	fscanf_s(keyFile, "%d", &*key);
-	fclose(keyFile);
+	fscanf_s(singleInfo, "%d\n", &*key);
+	printf("Keys: %d\n", *key);
+	fscanf_s(singleInfo, "%d\n", &*moves);
+	printf("Moves: %d\n", *moves);
+	Sleep(2500);
+	fscanf_s(singleInfo, "%d", &*numEnemies);
+	printf("Number of enemies: %d", *numEnemies);
+	Sleep(2500);
+	fclose(singleInfo);
 	for (int a = 0; a < *width; a++) {
 		for (int b = 0; b < *height; b++) {
 			if (feof(mapFile)) {
@@ -596,7 +607,7 @@ int checkWinDoor(int *kermitX, int *kermitY, MapT themap) {
 	}
 }
 
-void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY) {
+void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY, int *moves, int *numEnemy) {
 	//Shows a screen in which the creator information is being displayed
 	system("cls");
 	printf("Game: Huset\n");
@@ -606,7 +617,7 @@ void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *
 	getchar();
 	printf("\n\nPress enter to go back to the menu");
 	getchar();
-	initFunc(&*gamestate, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY);
+	initFunc(&*gamestate, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemy);
 }
 
 void sightRadius(int *kermitX, int *kermitY, MapT themap, int changer, char site) {
@@ -723,7 +734,7 @@ void updateKermitPoss(int *kermitX, int *kermitY, int *prevX, int *prevY, MapT t
 	themap.vArr[*kermitX][*kermitY] = 1;
 }
 
-void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY) {
+void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY, int *moves, int *numEnemy) {
 	//Gives the user some information on how the game works
 	system("cls");
 	int choice = 0;
@@ -736,7 +747,7 @@ void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flas
 	printf("=================================================\nEnter 1 to go back to the meny or 2 to exit: --> ");
 	scanf_s("%d", &choice);
 	if (choice == 1) {
-		initFunc(&gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY);
+		initFunc(&gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemy);
 	}
 	else if (choice == 2) {
 		//endfunction
@@ -789,7 +800,7 @@ void drawOptions(int *hover) {
 	}
 }
 
-void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight, int  *W, int *H, int *kermitX, int *kermitY) {
+void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight, int  *W, int *H, int *kermitX, int *kermitY, int *moves, int *numEnemies) {
 	int menuChoice = 0;
 	int hover = 1;
 	//fixing menu
@@ -805,17 +816,17 @@ void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight, int  *W, 
 					goto START;
 				case 2:
 					printf("File is being loaded....\n");
-					loadScreen(theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY);
+					loadScreen(theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemies );
 					Sleep(2000);
 					*gameState = RUNNING;
 					goto START;
 				case 3:
-					creatorScreen(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY);
+					creatorScreen(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemies);
 					hover = 1;
 					drawOptions(&hover);
 					break;
 				case 4:
-					howToPlay(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY);
+					howToPlay(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemies);
 					hover = 1;
 					drawOptions(&hover);
 					break;

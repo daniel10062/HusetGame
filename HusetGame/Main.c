@@ -54,7 +54,7 @@
 
 
 
-int main() {
+int main(int argc, char *argv[]) {
 	system("chcp 1252");
 	Randomize();
 	/*enum states gameState;*/
@@ -99,7 +99,7 @@ int main() {
 
 	//Enemy things...:>
 	typedef struct Enemy Enemy;
-	Enemy enemyArr[5];
+	Enemy enemyArr[7];
 	printf("Please specify the width and height of game room... ");
 	scanf_s("%d, %d", &W, &H);
 	if (W < 25) {
@@ -151,7 +151,7 @@ int main() {
 			}
 			theMap.mArr[kermit.posX][kermit.posY] = '@';
 			sightRadius(&kermit.posX, &kermit.posY, theMap, 1, siteRange);
-			initFunc(&gameState, theMap, &keys, &flashlight, &W, &H, &kermit.posX, &kermit.posY);
+			initFunc(&gameState, theMap, &keys, &flashlight, &W, &H, &kermit.posX, &kermit.posY, &moves, &numEnemies);
 		}
 		else if (gameState == RUNNING) {
 			if (testTry == 1) {
@@ -275,7 +275,7 @@ int main() {
 		else if (gameState == SAVE) {
 			printf("Saving current game to file....");
 			Sleep(2000);
-			saveScreen(&keys, &flashlight, theMap, &W, &H, &kermit.posX, &kermit.posX);
+			saveScreen(&keys, &flashlight, theMap, &W, &H, &kermit.posX, &kermit.posX, &moves, &numEnemies);
 			printf("Game is saved...\n");
 			gameState = EXIT;
 		}
