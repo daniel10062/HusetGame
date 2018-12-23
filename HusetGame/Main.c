@@ -116,17 +116,20 @@ int main(int argc, char *argv[]) {
 	width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
 	height = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
 
-	positionT test;
-	MapT theMap = createMap(W, H, 20);
+	/*positionT test;
+	MapT theMap = createMap(W, H, 20);;
+	inputT inputVal;
 	for (int num = 1; num <= numEnemies; num++) {
 		spawnEnemy(&enemyArr, theMap, &test, &W, &H, num - 1);
 	}
-
 	addFlashlight(theMap, &W, &H, &test, 0, 0);
 	for (int a = 0; a < 6; a++) {
 		addShop(theMap, &test, W, H);
 	}
-	addCoins(theMap, &test);
+	addCoins(theMap, &test);*/
+
+	positionT test;
+	MapT theMap = createMap(W,H,20);
 	inputT inputVal;
 
 	while (TRUE) {
@@ -139,19 +142,7 @@ int main(int argc, char *argv[]) {
 			char t = 'S';
 			kermit.weapons[0] = t;
 			kermit.weapons[1] = '\0';
-
-			while (theMap.mArr[kermit.posX][kermit.posY] != ' ') {
-				if (loopvalue == 4) {
-					kermit.posX++;
-				}
-				else {
-					kermit.posY++;
-				}
-				loopvalue++;
-			}
-			theMap.mArr[kermit.posX][kermit.posY] = '@';
-			sightRadius(&kermit.posX, &kermit.posY, theMap, 1, siteRange);
-			initFunc(&gameState, theMap, &keys, &flashlight, &W, &H, &kermit.posX, &kermit.posY, &moves, &numEnemies);
+			initFunc(&gameState, theMap, &keys, &flashlight, &W, &H, &kermit.posX, &kermit.posY, &moves, &numEnemies, &enemyArr, &test);
 		}
 		else if (gameState == RUNNING) {
 			if (testTry == 1) {
