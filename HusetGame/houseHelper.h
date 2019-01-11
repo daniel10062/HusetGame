@@ -125,6 +125,5 @@ void validMoveInput(int *move, MapT themap, struct Kermit *kermit, int *gamestat
 void showOptions(int hover);
 int isInArr(int val, int *arr, int size);
 void remove_element(int *array, int index, int array_length);
-void drawDiff(int *hoverInt);
 
 #endif

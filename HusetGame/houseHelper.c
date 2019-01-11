@@ -504,7 +504,7 @@ void spawnEnemy(Enemy *enemyarr, MapT themap, inputT *obj, int *W, int *H, int p
 			enemyarr[pos].y = RandomInteger(4, *H - offset);
 		}
 		enemyarr[pos].stance = 0;
-		int succes = placeObject(themap, enemyarr[pos].x, enemyarr[pos].y, '§', &*obj, 0);
+		int succes = placeObject(themap, enemyarr[pos].x, enemyarr[pos].y, '§', &*obj, 1);
 }
 
 int checkOpenDoor(int *kermitX, int *kermitY, MapT themap) {
@@ -607,7 +607,7 @@ int checkWinDoor(int *kermitX, int *kermitY, MapT themap) {
 	}
 }
 
-void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY, int *moves, int *numEnemy, Enemy enemyarr[], positionT test) {
+void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY, int *moves, int *numEnemy) {
 	//Shows a screen in which the creator information is being displayed
 	system("cls");
 	printf("Game: Huset\n");
@@ -617,7 +617,7 @@ void creatorScreen(int *gamestate, MapT theMap, int *keys, int *W, int *H, int *
 	getchar();
 	printf("\n\nPress enter to go back to the menu");
 	getchar();
-	initFunc(&*gamestate, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemy, &enemyarr, test);
+	initFunc(&*gamestate, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemy);
 }
 
 void sightRadius(int *kermitX, int *kermitY, MapT themap, int changer, char site) {
@@ -734,28 +734,20 @@ void updateKermitPoss(int *kermitX, int *kermitY, int *prevX, int *prevY, MapT t
 	themap.vArr[*kermitX][*kermitY] = 1;
 }
 
-void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY, int *moves, int *numEnemy, Enemy enemyarr[], positionT test) {
+void howToPlay(int *gameState, MapT theMap, int *keys, int *W, int *H, int *flashlight, int *kermitX, int *kermitY, int *moves, int *numEnemy) {
 	//Gives the user some information on how the game works
 	system("cls");
 	int choice = 0;
-	printf(ANSI_COLOR_CYAN "KEY ELEMENTS TO KNOW ABOUT THE GAME" ANSI_COLOR_RESET "\n");
 	printf("If you see a 'e' it means --> OutsideWall\n");
 	printf("If you see a 'M' it means --> OutsideDoor\n");
 	printf("If you see a 'K' it means --> Key\n");
 	printf("If you see a 'D' it means --> Insidedoor\n");
 	printf("If you see a 'w' it means --> insideWall\n");
-	printf("If you see a '§' it means --> Enemy\n");
-	printf("If you see a 'F' it means --> Flashlight\n");
-	printf("If you see a 'B' it means --> Shop\n");
 	printf("If you see a '@' it means --> Player Character\n");
-	printf("\n" ANSI_COLOR_GREEN "---------------------------------------------------" ANSI_COLOR_RESET "\n\n");
-	printf(ANSI_COLOR_MAGENTA "IMPORTANT THINGS TO KNOW" ANSI_COLOR_RESET "\n");
-	printf("You move your character by using your arrow keys.\n");
-	printf("Try gather as much coins as possible in order to by powerful weapons to defeat your enemies!\n\n");
 	printf("=================================================\nEnter 1 to go back to the meny or 2 to exit: --> ");
 	scanf_s("%d", &choice);
 	if (choice == 1) {
-		initFunc(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemy, &enemyarr, test);
+		initFunc(&gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemy);
 	}
 	else if (choice == 2) {
 		//endfunction
@@ -808,107 +800,33 @@ void drawOptions(int *hover) {
 	}
 }
 
-void drawDiff(int *hoverInt) {
-	if (*hoverInt < 1) {
-		*hoverInt = 3;
-	}
-	else if (*hoverInt > 3) {
-		*hoverInt = 1;
-	}
-	system("cls");
-	printf(ANSI_COLOR_CYAN "\t\t\t\t\t\t  Choose difficulty \n\n" ANSI_COLOR_RESET);
-	if (*hoverInt == 1) {
-		printf(ANSI_COLOR_MAGENTA "\t\t\t\t\t\t       Easy" ANSI_COLOR_RESET "\n\n");
-	}
-	else {
-		printf("\t\t\t\t\t\t       Easy\n\n");
-	}
-	if (*hoverInt == 2) {
-		printf(ANSI_COLOR_MAGENTA	"\t\t\t\t\t	       Medium" ANSI_COLOR_RESET "\n\n");
-	}
-	else {
-		printf("\t\t\t\t\t	       Medium\n\n");
-	}
-	if (*hoverInt == 3) {
-		printf(ANSI_COLOR_MAGENTA"\t\t\t\t\t	       Hard" ANSI_COLOR_RESET "\n\n");
-	}
-	else {
-		printf("\t\t\t\t\t	       Hard\n\n");
-	}
-}
-
-void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight, int  *W, int *H, int *kermitX, int *kermitY, int *moves, int *numEnemies, Enemy *enemyarr,positionT test ) {
+void initFunc(int *gameState, MapT theMap, int *keys, int *flashlight, int  *W, int *H, int *kermitX, int *kermitY, int *moves, int *numEnemies) {
 	int menuChoice = 0;
 	int hover = 1;
 	//fixing menu
 	drawOptions(&hover);
-	unsigned int difficulty = 0;
-	int DiffHover = 1;
 	int ch;
-	int hc;
 	START:if (*gameState == INIT) {
 		do {
 			ch = _getch();
 			if (ch == 13) {
 				switch (hover) {
 				case 1:
-					printf(ANSI_COLOR_CYAN "Please choose difficulty level" ANSI_COLOR_RESET "\n");
-					drawDiff(&DiffHover);
-					do {
-						hc = _getch();
-						if (hc == 13) {
-							if (DiffHover == 1) {
-								difficulty = 15;
-							}
-							else if (DiffHover == 2) {
-								difficulty = 20;
-							}
-							else if (DiffHover == 3) {
-								difficulty = 25;
-							}
-							goto ENDWHILE;
-						} else if (hc == 0 || hc == 224) {
-							switch (_getch())
-							{
-							case 72:
-								DiffHover -= 1;
-								drawDiff(&DiffHover);
-								break;
-							case 80:
-								DiffHover += 1;
-								drawDiff(&DiffHover);
-								break;
-							}
-						}
-					} while (hc != 13);
-					ENDWHILE:for (int num = 1; num <= *numEnemies; num++) {
-						spawnEnemy(&*enemyarr, theMap, &test, &*W, &*H, num - 1);
-					}
-					addFlashlight(theMap, &*W, &*H, &test, 0, 0);
-					for (int a = 0; a < 6; a++) {
-						addShop(theMap, &test, *W, *H);
-					}
-					addCoins(theMap, &test);
-					while (theMap.mArr[*kermitX][*kermitY] != ' ') {
-						*kermitX += 1;
-					}
-					theMap.mArr[*kermitX][*kermitY] = '@';
-					sightRadius(&*kermitX, &*kermitY, theMap, 1, 'S');
 					*gameState = RUNNING;
 					goto START;
 				case 2:
 					printf("File is being loaded....\n");
-					loadScreen(theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemies, &enemyarr, test);
+					loadScreen(theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemies );
 					Sleep(2000);
 					*gameState = RUNNING;
 					goto START;
 				case 3:
-					creatorScreen(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemies, &enemyarr, test);
+					creatorScreen(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemies);
 					hover = 1;
 					drawOptions(&hover);
 					break;
 				case 4:
-					howToPlay(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemies, &enemyarr, test);
+					howToPlay(&*gameState, theMap, &*keys, &*W, &*H, &*flashlight, &*kermitX, &*kermitY, &*moves, &*numEnemies);
 					hover = 1;
 					drawOptions(&hover);
 					break;
