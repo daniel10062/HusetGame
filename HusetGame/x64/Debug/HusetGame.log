@@ -1,0 +1,49 @@
+﻿  houseHelper.c
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(116): warning C4013: 'checkIfMoveCoins' undefined; assuming extern returning int
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(275): warning C4013: '_getch' undefined; assuming extern returning int
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(344): warning C4047: 'function': 'Kermit *' differs in levels of indirection from 'Kermit **'
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(344): warning C4024: 'updatedurability': different types for formal and actual parameter 1
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(380): warning C4047: '==': 'int' differs in levels of indirection from 'void *'
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(392): warning C4020: 'loadFile': too many actual parameters
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(497): warning C4013: 'RandomInteger' undefined; assuming extern returning int
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(507): warning C4133: 'function': incompatible types - from 'inputT *' to 'positionT *'
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(758): warning C4047: 'function': 'int *' differs in levels of indirection from 'int **'
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(758): warning C4024: 'initFunc': different types for formal and actual parameter 1
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(1078): warning C4033: 'weaponList' must return a value
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(1071): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(1128): warning C4013: 'checkKeyMove' undefined; assuming extern returning int
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(1131): warning C4013: 'checkDoorMove' undefined; assuming extern returning int
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(1267): warning C4033: 'checkKeyMove' must return a value
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(1296): warning C4033: 'checkDoorMove' must return a value
+  Main.c
+c:\users\danie\source\repos\husetgame\husetgame\main.c(121): warning C4018: '<=': signed/unsigned mismatch
+c:\users\danie\source\repos\husetgame\husetgame\main.c(122): warning C4047: 'function': 'Enemy *' differs in levels of indirection from 'Enemy (*)[7]'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(122): warning C4024: 'spawnEnemy': different types for formal and actual parameter 1
+c:\users\danie\source\repos\husetgame\husetgame\main.c(122): warning C4133: 'function': incompatible types - from 'positionT *' to 'inputT *'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(125): warning C4047: 'function': 'int' differs in levels of indirection from 'unsigned int *'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(125): warning C4024: 'addFlashlight': different types for formal and actual parameter 2
+c:\users\danie\source\repos\husetgame\husetgame\main.c(125): warning C4024: 'addFlashlight': different types for formal and actual parameter 3
+c:\users\danie\source\repos\husetgame\husetgame\main.c(154): warning C4133: 'function': incompatible types - from 'states *' to 'int *'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(180): warning C4047: 'function': 'int *' differs in levels of indirection from 'int (*)[4]'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(180): warning C4024: 'moveInput': different types for formal and actual parameter 1
+c:\users\danie\source\repos\husetgame\husetgame\main.c(180): warning C4133: 'function': incompatible types - from 'states *' to 'int *'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(205): warning C4133: 'function': incompatible types - from 'states *' to 'int *'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(209): warning C4133: 'function': incompatible types - from 'states *' to 'int *'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(209): warning C4047: 'function': 'Enemy *' differs in levels of indirection from 'Enemy (*)[7]'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(209): warning C4024: 'checkFight': different types for formal and actual parameter 4
+c:\users\danie\source\repos\husetgame\husetgame\main.c(240): warning C4013: '_getch' undefined; assuming extern returning int
+c:\users\danie\source\repos\husetgame\husetgame\main.c(338): warning C4133: 'function': incompatible types - from 'int [100]' to 'const char *'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(416): warning C4047: '=': 'char *' differs in levels of indirection from 'int'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(417): warning C4047: 'function': 'const char *' differs in levels of indirection from 'char *[100]'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(417): warning C4024: 'strcpy_s': different types for formal and actual parameter 3
+c:\users\danie\source\repos\husetgame\husetgame\main.c(422): warning C4047: '=': 'char *' differs in levels of indirection from 'int'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(423): warning C4047: 'function': 'const char *' differs in levels of indirection from 'char *[100]'
+c:\users\danie\source\repos\husetgame\husetgame\main.c(423): warning C4024: 'strcpy_s': different types for formal and actual parameter 3
+c:\users\danie\source\repos\husetgame\husetgame\main.c(130): warning C4101: 'inputVal': unreferenced local variable
+  Generating Code...
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(533): warning C4715: 'checkOpenDoor': not all control paths return a value
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(608): warning C4715: 'checkWinDoor': not all control paths return a value
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(1123): warning C4715: 'weaponList': not all control paths return a value
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(1284): warning C4715: 'checkKeyMove': not all control paths return a value
+c:\users\danie\source\repos\husetgame\husetgame\househelper.c(1321): warning C4715: 'checkDoorMove': not all control paths return a value
+  HusetGame.vcxproj -> C:\Users\danie\Source\Repos\HusetGame\x64\Debug\HusetGame.exe
